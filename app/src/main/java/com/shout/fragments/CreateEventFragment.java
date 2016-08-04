@@ -46,7 +46,6 @@ import java.util.Locale;
 
 public class CreateEventFragment extends Fragment {
 
-    private static final String ARG_SECTION_NUMBER = "section_number";
     private final String CREATE_EVENT_PHP_PATH = "http://shouttestserver.ueuo.com/create_event.php";
 
     EditText eventTitle_editText, eventLocation_editText, eventDescription_editText,
@@ -56,16 +55,6 @@ public class CreateEventFragment extends Fragment {
     CheckBox shoutEvent_checkBox;
     FlexboxLayout friends_area;
 
-    public CreateEventFragment() {
-    }
-
-    public static CreateEventFragment newInstance(int sectionNumber) {
-        CreateEventFragment fragment = new CreateEventFragment();
-        Bundle args = new Bundle();
-        args.putInt(ARG_SECTION_NUMBER, sectionNumber);
-        fragment.setArguments(args);
-        return fragment;
-    }
 
     @Override
     public View onCreateView(final LayoutInflater inflater, ViewGroup container, Bundle

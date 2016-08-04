@@ -40,7 +40,6 @@ import java.util.ArrayList;
 
 
 public class EventsFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor> {
-    private static final String ARG_SECTION_NUMBER = "section_number";
     private final String UPDATE_GOING_PHP_PATH = "http://shouttestserver.ueuo.com/update_going.php";
     private final int ALL = 0;
     private final int MY_EVENTS = 1;
@@ -61,18 +60,6 @@ public class EventsFragment extends Fragment implements LoaderManager.LoaderCall
             ((EventsAdapter) eventsRecyclerView.getAdapter()).setData(data, userId);
         }
     };
-
-    public EventsFragment() {
-    }
-
-    public static EventsFragment newInstance(int sectionNumber) {
-        EventsFragment fragment = new EventsFragment();
-        Bundle args = new Bundle();
-        args.putInt(ARG_SECTION_NUMBER, sectionNumber);
-        fragment.setArguments(args);
-        return fragment;
-    }
-
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
