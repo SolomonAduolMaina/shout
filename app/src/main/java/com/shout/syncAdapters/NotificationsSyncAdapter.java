@@ -35,7 +35,6 @@ public class NotificationsSyncAdapter extends AbstractThreadedSyncAdapter {
     @Override
     public void onPerformSync(Account account, Bundle bundle, String authority,
                               ContentProviderClient client, SyncResult syncResult) {
-        //android.os.Debug.waitForDebugger();
         JSONObject json = new JSONObject();
         try {
             json.put("userId", bundle.getString("userId"));

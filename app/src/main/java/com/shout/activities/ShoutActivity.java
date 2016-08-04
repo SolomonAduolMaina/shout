@@ -1,24 +1,16 @@
 package com.shout.activities;
 
-import android.accounts.Account;
-import android.accounts.AccountManager;
-
-import android.app.SearchManager;
-import android.content.ContentResolver;
-import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 
 import android.os.Bundle;
 
 import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 
 import com.facebook.AccessToken;
@@ -27,9 +19,10 @@ import com.shout.R;
 import com.shout.fragments.CreateEventFragment;
 import com.shout.fragments.EventsFragment;
 import com.shout.fragments.SearchFragment;
-import com.shout.notificationsProvider.NotificationsProvider;
 
-public class ShoutActivity extends AppCompatActivity {
+public class ShoutActivity extends AppCompatActivity implements SearchView.OnQueryTextListener{
+
+
     public final static String ACTION_FINISHED_SYNC = "com.shout.ACTION_FINISHED_SYNC";
     public static IntentFilter syncIntentFilter = new IntentFilter(ACTION_FINISHED_SYNC);
 
@@ -53,16 +46,6 @@ public class ShoutActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        Bundle settingsBundle = new Bundle();
-        settingsBundle.putBoolean(ContentResolver.SYNC_EXTRAS_MANUAL, true);
-        settingsBundle.putBoolean(ContentResolver.SYNC_EXTRAS_EXPEDITED, true);
-        settingsBundle.putString("userId", "'" + getIntent().getStringExtra("userId") + "'");
-        Account account = new Account("dummy account", "http://shouttestserver.ueuo.com");
-        AccountManager accountManager = (AccountManager) this.getSystemService(ACCOUNT_SERVICE);
-        accountManager.addAccountExplicitly(account, null, null);
-        //ContentResolver.setSyncAutomatically(account, ShoutDatabaseDescription.AUTHORITY, true);
-        ContentResolver.requestSync(account, NotificationsProvider.AUTHORITY, settingsBundle);
-
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -78,40 +61,32 @@ public class ShoutActivity extends AppCompatActivity {
         });
 
         EventsFragment eventsFragment = new EventsFragment();
-        getSupportFragmentManager().beginTransaction().add(R.id.fragment, eventsFragment)
-                .commit();
+        getSupportFragmentManager().beginTransaction().add(R.id.fragment, eventsFragment).commit();
     }
-
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu, menu);
-        final SearchView searchView = (SearchView) menu.findItem(R.id.action_search)
-                .getActionView();
-        searchView.setOnSearchClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                SearchFragment searchFragment = new SearchFragment();
-                Bundle args = new Bundle();
-                args.putString("query", searchView.getQuery().toString());
-                searchFragment.setArguments(args);
-                FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
-                transaction.replace(R.id.fragment, searchFragment);
-                transaction.addToBackStack(null);
-                transaction.commit();
-            }
-        });
+        SearchView searchView = (SearchView) menu.findItem(R.id.action_search).getActionView();
+        searchView.setOnQueryTextListener(this);
         return true;
     }
 
     @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        int id = item.getItemId();
+    public boolean onQueryTextSubmit(String query) {
+        SearchFragment searchFragment = new SearchFragment();
+        Bundle args = new Bundle();
+        args.putString("query", query);
+        searchFragment.setArguments(args);
+        FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
+        transaction.replace(R.id.fragment, searchFragment);
+        transaction.addToBackStack(null);
+        transaction.commit();
+        return true;
+    }
 
-        if (id == R.id.action_settings) {
-            return true;
-        }
-
-        return super.onOptionsItemSelected(item);
+    @Override
+    public boolean onQueryTextChange(String newText) {
+        return true;
     }
 }

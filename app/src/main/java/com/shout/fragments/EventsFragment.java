@@ -65,6 +65,7 @@ public class EventsFragment extends Fragment implements LoaderManager.LoaderCall
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         getLoaderManager().initLoader(0, null, this);
+        userId = getActivity().getIntent().getStringExtra("userId");
     }
 
 
@@ -73,11 +74,8 @@ public class EventsFragment extends Fragment implements LoaderManager.LoaderCall
             savedInstanceState) {
         View rootView = inflater.inflate(R.layout.events_fragment, container, false);
 
-        userId = getActivity().getIntent().getStringExtra("userId");
-
         eventsRecyclerView = (RecyclerView) rootView.findViewById(R.id.events_recyclerView);
         eventsTabLayout = (TabLayout) rootView.findViewById(R.id.events_tabLayout);
-
         eventsRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
         eventsRecyclerView.setAdapter(new EventsAdapter());
 
