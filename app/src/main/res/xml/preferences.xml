@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <PreferenceCategory
+        android:summary="Send me a notification when"
+        android:title="Send me a notification when">
+
+        <SwitchPreference
+            android:defaultValue="false"
+            android:key="friendJoin"
+            android:summary="A friend joins my event"/>
+
+        <SwitchPreference
+            android:defaultValue="false"
+            android:key="eventInvite"
+            android:summary="I receive an event invite"/>
+
+        <SwitchPreference
+            android:defaultValue="false"
+            android:key="eventSuggestion"
+            android:summary="I receive an event suggestion"/>
+
+        <SwitchPreference
+            android:defaultValue="false"
+            android:key="eventChange"
+            android:summary="An event I am following changes date, time or location"/>
+
+        <ListPreference
+            android:entries="@array/preferences"
+            android:entryValues="@array/preferences"
+            android:key="suggestionNumber"
+            android:summary="Click here to set the number of suggestions you would like to receive per day"/>
+    </PreferenceCategory>
+</PreferenceScreen>

@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<TableLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:id="@+id/table_tableLayout">
+
+    <TableRow>
+
+        <TextView
+            android:id="@+id/eventTitle_textView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/event_name"/>
+
+        <EditText
+            android:id="@+id/eventTitle_editText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:inputType="text"/>
+    </TableRow>
+
+    <TableRow>
+
+        <TextView
+            android:id="@+id/eventLocation_textView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/event_location"/>
+
+
+        <EditText
+            android:id="@+id/eventLocation_editText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:inputType="text"/>
+    </TableRow>
+
+    <TableRow>
+
+        <TextView
+            android:id="@+id/eventDescription_textView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/event_description"/>
+
+
+        <EditText
+            android:id="@+id/eventDescription_editText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:inputType="text"/>
+    </TableRow>
+
+    <TableRow>
+
+        <TextView
+            android:id="@+id/startDate_textView"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight=".25"
+            android:text="Start Date"/>
+
+        <TextView
+            android:id="@+id/chooseStartDate_textView"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight=".25"/>
+
+        <TextView
+            android:id="@+id/startTime_textView"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight=".25"
+            android:text="Start Time"/>
+
+        <TextView
+            android:id="@+id/chooseStartTime_textView"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight=".25"/>
+
+    </TableRow>
+
+    <TableRow>
+
+        <TextView
+            android:id="@+id/endDate_textView"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight=".25"
+            android:text="End Date"/>
+
+        <TextView
+            android:id="@+id/chooseEndDate_textView"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight=".25"/>
+
+        <TextView
+            android:id="@+id/endTime_textView"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight=".25"
+            android:text="End Time"/>
+
+        <TextView
+            android:id="@+id/chooseEndTime_textView"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight=".25"/>
+    </TableRow>
+
+    <TableRow>
+
+        <TextView
+            android:id="@+id/eventTag_textView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/event_tag"/>
+
+        <EditText
+            android:id="@+id/eventTag_editText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:inputType="text"/>
+    </TableRow>
+
+    <TableRow>
+        <TextView
+            android:id="@+id/inviteFriends_textView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Invite Friends"/>
+
+        <com.google.android.flexbox.FlexboxLayout
+            xmlns:android="http://schemas.android.com/apk/res/android"
+            xmlns:app="http://schemas.android.com/apk/res-auto"
+            android:id="@+id/friendsArea_flexBox"
+            android:layout_width="0dp"
+            android:layout_weight="0.5"
+            android:layout_height="wrap_content"
+            android:layout_gravity="fill_horizontal"
+            app:alignContent="stretch"
+            app:alignItems="stretch"
+            app:flexWrap="wrap">
+
+            <com.shout.customViews.FriendsView
+                android:id="@+id/eventInvitees_textView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="fill_horizontal"
+                android:dropDownAnchor="@id/table_tableLayout"
+                android:hint="@string/friends_and_groups"/>
+        </com.google.android.flexbox.FlexboxLayout>
+
+    </TableRow>
+
+    <TableRow>
+
+        <CheckBox
+            android:id="@+id/shoutEvent_checkBox"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/shout_event"/>
+
+        <Button
+            android:id="@+id/createEvent_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/create_event"/>
+    </TableRow>
+
+</TableLayout>
