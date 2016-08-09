@@ -5,14 +5,18 @@ import android.database.Cursor;
 import com.shout.notificationsProvider.ShoutDatabaseDescription.Event;
 import com.shout.notificationsProvider.ShoutDatabaseDescription.Invite;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.util.ArrayList;
 
 public class WrapperClasses {
-    public static class EventDetails {
+    public static class EventInvite {
         public String inviteeId, eventId, type, going, sent, creator_id, title, location,
                 description, startDateTime, endDateTime, tag, shout;
 
-        public EventDetails(Cursor cursor) {
+        public EventInvite(Cursor cursor) {
             this.inviteeId = cursor.getString(cursor.getColumnIndex(Invite.COLUMN_INVITEE_ID));
             this.eventId = cursor.getString(cursor.getColumnIndex(Invite.COLUMN_EVENT_ID));
             this.type = cursor.getString(cursor.getColumnIndex(Invite.COLUMN_TYPE));
@@ -30,33 +34,46 @@ public class WrapperClasses {
         }
     }
 
-    public static class EventDetailClasses {
-        public ArrayList<EventDetails> all;
-        public ArrayList<EventDetails> myEvents;
-        public ArrayList<EventDetails> invited;
-        public ArrayList<EventDetails> suggested;
 
-        public EventDetailClasses(Cursor cursor, String userId) {
+    public static class SearchClasses {
+        public JSONArray eventInvites;
+        public JSONArray persons;
+        public JSONArray groups;
+
+        public SearchClasses(JSONObject jsonObject) throws JSONException {
+            eventInvites = jsonObject.getJSONArray("events");
+            persons = jsonObject.getJSONArray("friends");
+            groups = jsonObject.getJSONArray("groups");
+        }
+    }
+
+    public static class EventInviteClasses {
+        public ArrayList<EventInvite> all;
+        public ArrayList<EventInvite> myEvents;
+        public ArrayList<EventInvite> invited;
+        public ArrayList<EventInvite> suggested;
+
+        public EventInviteClasses(Cursor cursor, String userId) {
             all = new ArrayList<>();
             myEvents = new ArrayList<>();
             invited = new ArrayList<>();
             suggested = new ArrayList<>();
 
             while (cursor.moveToNext()) {
-                EventDetails notification = (new EventDetails(cursor));
-                if (notification.creator_id.equals(userId)) {
-                    myEvents.add(notification);
+                EventInvite eventInvite = (new EventInvite(cursor));
+                if (eventInvite.creator_id.equals(userId)) {
+                    myEvents.add(eventInvite);
                 }
-                if (notification.inviteeId != null) {
-                    if (notification.inviteeId.equals(userId)) {
-                        if (notification.type.equals("Invite")) {
-                            invited.add(notification);
+                if (eventInvite.inviteeId != null) {
+                    if (eventInvite.inviteeId.equals(userId)) {
+                        if (eventInvite.type.equals("Invite")) {
+                            invited.add(eventInvite);
                         } else {
-                            suggested.add(notification);
+                            suggested.add(eventInvite);
                         }
                     }
                 }
-                all.add(notification);
+                all.add(eventInvite);
             }
             cursor.close();
         }

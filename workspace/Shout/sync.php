@@ -11,7 +11,7 @@ $json = json_decode ( $data, true );
 $user_id = $json ['userId'];
 $connection = mysqli_connect ( $host_name, $user_name, $password, $user_name );
 
-$events_query = "SELECT Event.* FROM Event LEFT OUTER JOIN Invite ON 
+$events_query = "SELECT DISTINCT Event.* FROM Event LEFT OUTER JOIN Invite ON 
 Event.event_id  = Invite.event_id WHERE Event.creator_id = $user_id OR 
 (Invite.invitee_id =  $user_id AND Invite.sent =  'No')";
 $events_result = mysqli_query ( $connection, $events_query );
@@ -20,7 +20,7 @@ while ( $row = mysqli_fetch_assoc ( $events_result ) ) {
 	array_push ( $events, $row );
 }
 
-$invites_query = "SELECT * FROM Invite WHERE invitee_id = $user_id AND sent = 
+$invites_query = "SELECT DISTINCT * FROM Invite WHERE invitee_id = $user_id AND sent = 
 'No'";
 $invites_result = mysqli_query ( $connection, $invites_query );
 $invites = array ();

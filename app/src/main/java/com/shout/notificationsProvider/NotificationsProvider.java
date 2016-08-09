@@ -86,7 +86,7 @@ public class NotificationsProvider extends ContentProvider {
         }
 
         /*switch (uriMatcher.match(uri)) {
-            case ONE_NOTIFICATION: // notification with specified id will be selected
+            case ONE_NOTIFICATION: // eventInvite with specified id will be selected
                 queryBuilder.appendWhere(ShoutDatabaseDescription.Invite._ID + "=" + uri
                         .getLastPathSegment());
                 break;

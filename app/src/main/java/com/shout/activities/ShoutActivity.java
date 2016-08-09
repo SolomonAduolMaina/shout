@@ -1,5 +1,6 @@
 package com.shout.activities;
 
+import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 
@@ -12,6 +13,7 @@ import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 
 import com.facebook.AccessToken;
 import com.facebook.AccessTokenTracker;
@@ -20,7 +22,7 @@ import com.shout.fragments.CreateEventFragment;
 import com.shout.fragments.EventsFragment;
 import com.shout.fragments.SearchFragment;
 
-public class ShoutActivity extends AppCompatActivity implements SearchView.OnQueryTextListener{
+public class ShoutActivity extends AppCompatActivity implements SearchView.OnQueryTextListener {
 
 
     public final static String ACTION_FINISHED_SYNC = "com.shout.ACTION_FINISHED_SYNC";
@@ -28,7 +30,7 @@ public class ShoutActivity extends AppCompatActivity implements SearchView.OnQue
 
     private AccessTokenTracker tokenTracker;
     private final AppCompatActivity THIS_INSTANCE = this;
-
+    private SearchView searchView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,7 +69,7 @@ public class ShoutActivity extends AppCompatActivity implements SearchView.OnQue
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu, menu);
-        SearchView searchView = (SearchView) menu.findItem(R.id.action_search).getActionView();
+        searchView = (SearchView) menu.findItem(R.id.action_search).getActionView();
         searchView.setOnQueryTextListener(this);
         return true;
     }
@@ -78,6 +80,9 @@ public class ShoutActivity extends AppCompatActivity implements SearchView.OnQue
         Bundle args = new Bundle();
         args.putString("query", query);
         searchFragment.setArguments(args);
+        InputMethodManager inputMethodManager = (InputMethodManager) getSystemService
+                (Context.INPUT_METHOD_SERVICE);
+        inputMethodManager.hideSoftInputFromWindow(searchView.getWindowToken(), 0);
         FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
         transaction.replace(R.id.fragment, searchFragment);
         transaction.addToBackStack(null);

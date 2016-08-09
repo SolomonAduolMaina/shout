@@ -1,0 +1,117 @@
+<?php
+error_reporting ( E_ALL );
+ini_set ( 'display_errors', 1 );
+
+$host_name = 'localhost';
+$db_name = '987829';
+$db_password = 'Auremest7';
+
+$data = file_get_contents ( 'php://input' );
+$json = json_decode ( $data, true );
+$user_name = $json ['user_name'];
+$facebook_id = $json ['facebook_id'];
+$password = $json ['password'];
+$email_address = $json ['email_address'];
+$new_user = $json ['new_user'];
+$login_type = $json ['login_type'];
+$facebook_friends = $json ['facebook_friends'];
+
+$connection = mysqli_connect ( $host_name, $db_name, $db_password, $db_name );
+$result = $user_exists = $insert_id = FALSE;
+if ($login_type == "Facebook") {
+	$lookup_query = "SELECT * from User WHERE facebook_id = $facebook_id";
+	$lookup_result = mysqli_query ( $connection, $lookup_query );
+	$user_exists = mysqli_num_rows ( $lookup_result ) > 0;
+	$insert_query = "INSERT INTO User (facebook_id, user_name) VALUES
+	($facebook_id, $user_name) ON DUPLICATE KEY UPDATE user_id = 
+	LAST_INSERT_ID(user_id), user_name = $user_name, facebook_id = $facebook_id";
+	$result = mysqli_query ( $connection, $insert_query );
+	$insert_id = "'$connection->insert_id'";
+	
+	foreach ( $facebook_friends as $friend ) {
+		$friend_id = "'" . $friend ['id'] . "'";
+		$select_query = "SELECT user_id from User WHERE facebook_id = $friend_id";
+		$select_result = mysqli_query ( $connection, $select_query );
+		$select_result = mysqli_fetch_assoc ( $select_result );
+		$user_id = "'" . $select_result ['user_id'] . "'";
+		$insert_query = "INSERT INTO Connection (user_id, friend_id) VALUES
+		($insert_id, $user_id) ON DUPLICATE KEY UPDATE
+		user_id = $insert_id, friend_id = $user_id";
+		$result = $result && mysqli_query ( $connection, $insert_query );
+		$swap = function ($var1, $var2) {
+			$temp = $var1;
+			$var1 = $var2;
+			$var2 = $temp;
+		};
+		swap ( $user_id, $insert_id );
+		$result = $result && mysqli_query ( $connection, $insert_query );
+		swap ( $user_id, $insert_id );
+	}
+} else {
+	$lookup_query = "SELECT * from User WHERE email_address = $email_address";
+	$lookup_result = mysqli_query ( $connection, $lookup_query );
+	$user_exists = mysqli_num_rows ( $lookup_result ) > 0;
+	if ($new_user == "Yes") {
+		if (! $user_exists) {
+			$insert_query = "INSERT INTO User (user_name, password, email_address) 
+			VALUES ($user_name, $password, $email_address)";
+			$insert_id = "'$connection->insert_id'";
+			
+			$result = mysqli_query ( $connection, $insert_query );
+		}
+	} else {
+		if ($user_exists) {
+			$lookup_result = mysqli_fetch_assoc ( $lookup_result );
+			$password_correct = ("'" . $lookup_result ['password'] . "'") == $password;
+			if ($password_correct) {
+				$insert_query = "INSERT INTO User (password, email_address)
+				 VALUES ($password, $email_address) 
+				 ON DUPLICATE KEY UPDATE user_id = LAST_INSERT_ID(user_id),
+				 password = $password, email_address = $email_address";
+				$insert_id = "'$connection->insert_id'";
+				$result = mysqli_query ( $connection, $insert_query );
+			}
+		}
+	}
+}
+
+if (! $result) {
+	if ($user_exists) {
+		if ($new_user == "Yes") {
+			echo json_encode ( array (
+					'insert' => "Failure!",
+					'error_message' => "User with that email address already exists",
+					'token' => NULL 
+			) );
+		} else {
+			echo json_encode ( array (
+					'insert' => "Failure!",
+					'error_message' => "Password Incorrect",
+					'token' => NULL 
+			) );
+		}
+	} else {
+		if ($new_user != "Yes") {
+			echo json_encode ( array (
+					'insert' => "Failure!",
+					'error_message' => "User does not exist",
+					'token' => NULL 
+			) );
+		} else {
+			echo json_encode ( array (
+					'insert' => "Failure!",
+					'error_message' => mysqli_error ( $connection ),
+					'token' => NULL 
+			) );
+		}
+	}
+} else {
+	$select_query = "SELECT * FROM User WHERE user_id = $insert_id";
+	$select_result = mysqli_query ( $connection, $select_query );
+	echo json_encode ( array (
+			'insert' => "Success!",
+			'error_message' => NULL,
+			'token' => mysqli_fetch_assoc ( $select_result ) 
+	) );
+}
+?>

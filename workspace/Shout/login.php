@@ -19,7 +19,7 @@ $facebook_friends = $json ['facebook_friends'];
 $connection = mysqli_connect ( $host_name, $db_name, $db_password, $db_name );
 $result = $user_exists = $insert_id = FALSE;
 if ($login_type == "Facebook") {
-	$lookup_query = "SELECT * from User WHERE facebook_id = $facebook_id";
+	$lookup_query = "SELECT DISTINCT * from User WHERE facebook_id = $facebook_id";
 	$lookup_result = mysqli_query ( $connection, $lookup_query );
 	$user_exists = mysqli_num_rows ( $lookup_result ) > 0;
 	$insert_query = "INSERT INTO User (facebook_id, user_name) VALUES
@@ -30,7 +30,7 @@ if ($login_type == "Facebook") {
 	
 	foreach ( $facebook_friends as $friend ) {
 		$friend_id = "'" . $friend ['id'] . "'";
-		$select_query = "SELECT user_id from User WHERE facebook_id = $friend_id";
+		$select_query = "SELECT DISTINCT user_id from User WHERE facebook_id = $friend_id";
 		$select_result = mysqli_query ( $connection, $select_query );
 		$select_result = mysqli_fetch_assoc ( $select_result );
 		$user_id = "'" . $select_result ['user_id'] . "'";
@@ -38,9 +38,17 @@ if ($login_type == "Facebook") {
 		($insert_id, $user_id) ON DUPLICATE KEY UPDATE
 		user_id = $insert_id, friend_id = $user_id";
 		$result = $result && mysqli_query ( $connection, $insert_query );
+		$swap = function ($var1, $var2) {
+			$temp = $var1;
+			$var1 = $var2;
+			$var2 = $temp;
+		};
+		$swap ( $user_id, $insert_id );
+		$result = $result && mysqli_query ( $connection, $insert_query );
+		$swap ( $user_id, $insert_id );
 	}
 } else {
-	$lookup_query = "SELECT * from User WHERE email_address = $email_address";
+	$lookup_query = "SELECT DISTINCT * from User WHERE email_address = $email_address";
 	$lookup_result = mysqli_query ( $connection, $lookup_query );
 	$user_exists = mysqli_num_rows ( $lookup_result ) > 0;
 	if ($new_user == "Yes") {
@@ -73,13 +81,13 @@ if (! $result) {
 			echo json_encode ( array (
 					'insert' => "Failure!",
 					'error_message' => "User with that email address already exists",
-					'token' => NULL,
+					'token' => NULL 
 			) );
 		} else {
 			echo json_encode ( array (
 					'insert' => "Failure!",
 					'error_message' => "Password Incorrect",
-					'token' => NULL,
+					'token' => NULL 
 			) );
 		}
 	} else {
@@ -87,23 +95,23 @@ if (! $result) {
 			echo json_encode ( array (
 					'insert' => "Failure!",
 					'error_message' => "User does not exist",
-					'token' => NULL,
+					'token' => NULL 
 			) );
 		} else {
 			echo json_encode ( array (
 					'insert' => "Failure!",
 					'error_message' => mysqli_error ( $connection ),
-					'token' => NULL,
+					'token' => NULL 
 			) );
 		}
 	}
 } else {
-	$select_query = "SELECT * FROM User WHERE user_id = $insert_id";
+	$select_query = "SELECT DISTINCT * FROM User WHERE user_id = $insert_id";
 	$select_result = mysqli_query ( $connection, $select_query );
 	echo json_encode ( array (
 			'insert' => "Success!",
 			'error_message' => NULL,
-			'token' => mysqli_fetch_assoc ( $select_result ),
+			'token' => mysqli_fetch_assoc ( $select_result ) 
 	) );
 }
 ?>

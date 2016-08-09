@@ -2,27 +2,30 @@
 <section name="Workbench">
 	<section name="org.eclipse.ui.texteditor.FindReplaceDialog">
 		<item value="false" key="isRegEx"/>
-		<item value="NULL" key="selection"/>
-		<item value="false" key="casesensitive"/>
+		<item value="SELECT DISTINCT" key="selection"/>
+		<item value="true" key="casesensitive"/>
 		<item value="false" key="incremental"/>
 		<item value="true" key="wrap"/>
 		<item value="false" key="wholeword"/>
 		<list key="findhistory">
+			<item value="SELECT"/>
+			<item value="function ($var1, $var2) {"/>
+			<item value="&lt;=&gt;"/>
 			<item value="NULL"/>
 			<item value="mysqli_num_rows"/>
 			<item value="mysqli_fetch_assoc"/>
 			<item value="$name"/>
 			<item value="$query"/>
-			<item value="$new_name"/>
-			<item value="$user_id"/>
-			<item value="mysql"/>
 		</list>
 		<list key="replacehistory">
+			<item value="SELECT DISTINCT"/>
+			<item value="SELECT DISTINCT "/>
+			<item value="=="/>
+			<item value="="/>
 			<item value="$user_name"/>
 			<item value="$insert_query"/>
 			<item value="$name"/>
 			<item value="$facebook_id"/>
-			<item value="HomeFragment"/>
 		</list>
 	</section>
 	<section name="org.eclipse.ui.texteditor.FindReplaceDialog_dialogBounds">

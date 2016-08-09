@@ -27,11 +27,11 @@ import android.widget.Toast;
 
 import com.shout.R;
 import com.shout.activities.ShoutActivity;
-import com.shout.applications.ShoutApplication;
+import com.shout.applications.ShoutApplication.SendAndReceiveJSON;
 import com.shout.notificationsProvider.NotificationsProvider;
 import com.shout.notificationsProvider.ShoutDatabaseDescription.Invite;
-import com.shout.wrapperClasses.WrapperClasses.EventDetails;
-import com.shout.wrapperClasses.WrapperClasses.EventDetailClasses;
+import com.shout.wrapperClasses.WrapperClasses.EventInvite;
+import com.shout.wrapperClasses.WrapperClasses.EventInviteClasses;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -116,7 +116,6 @@ public class EventsFragment extends Fragment implements LoaderManager.LoaderCall
 
     }
 
-
     @Override
     public void onResume() {
         getContext().registerReceiver(eventsReceiver, ShoutActivity.syncIntentFilter);
@@ -129,15 +128,13 @@ public class EventsFragment extends Fragment implements LoaderManager.LoaderCall
         super.onPause();
     }
 
-
     public class EventsAdapter extends RecyclerView.Adapter<EventsAdapter.ViewHolder> {
-
-        private EventDetailClasses eventDetailClasses;
+        private EventInviteClasses eventInviteClasses;
         private int tab = 0;
 
         public class ViewHolder extends RecyclerView.ViewHolder {
             public View view;
-            public EventDetails notification;
+            public EventInvite eventInvite;
 
             public ViewHolder(View view) {
                 super(view);
@@ -157,43 +154,43 @@ public class EventsFragment extends Fragment implements LoaderManager.LoaderCall
 
         @Override
         public void onBindViewHolder(final ViewHolder holder, int position) {
-            if (eventDetailClasses != null) {
-                ArrayList<EventDetails> data = null;
+            if (eventInviteClasses != null) {
+                ArrayList<EventInvite> data = null;
                 switch (tab) {
                     case ALL:
-                        data = eventDetailClasses.all;
+                        data = eventInviteClasses.all;
                         break;
                     case MY_EVENTS:
-                        data = eventDetailClasses.myEvents;
+                        data = eventInviteClasses.myEvents;
                         break;
                     case INVITED:
-                        data = eventDetailClasses.invited;
+                        data = eventInviteClasses.invited;
                         break;
                     case SUGGESTED:
-                        data = eventDetailClasses.suggested;
+                        data = eventInviteClasses.suggested;
                         break;
                 }
-                holder.notification = data.get(position);
+                holder.eventInvite = data.get(position);
                 ((TextView) holder.view.findViewById(R.id.title_textView)).setText(holder
-                        .notification.title);
+                        .eventInvite.title);
                 ((TextView) holder.view.findViewById(R.id.location_textView)).setText(holder
-                        .notification.location);
+                        .eventInvite.location);
                 ((TextView) holder.view.findViewById(R.id.startDateTime_textView)).setText(holder
-                        .notification.startDateTime);
+                        .eventInvite.startDateTime);
                 Button yesButton = (Button) holder.view.findViewById(R.id.button);
                 yesButton.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
-                        holder.notification.going = "Yes";
+                        holder.eventInvite.going = "Yes";
                         JSONObject jsonObject = new JSONObject();
                         try {
-                            jsonObject.put("going", "'" + holder.notification.going + "'");
-                            jsonObject.put("invitee_id", "'" + holder.notification.inviteeId + "'");
-                            jsonObject.put("event_id", "'" + holder.notification.eventId + "'");
+                            jsonObject.put("going", "'" + holder.eventInvite.going + "'");
+                            jsonObject.put("invitee_id", "'" + holder.eventInvite.inviteeId + "'");
+                            jsonObject.put("event_id", "'" + holder.eventInvite.eventId + "'");
                         } catch (JSONException e) {
                             e.printStackTrace();
                         }
-                        new UpdateNotificationTask().execute(new Pair<>(UPDATE_GOING_PHP_PATH, new
+                        new UpdateEventTask().execute(new Pair<>(UPDATE_GOING_PHP_PATH, new
                                 Pair<>(holder, jsonObject)));
                     }
                 });
@@ -201,16 +198,16 @@ public class EventsFragment extends Fragment implements LoaderManager.LoaderCall
                 noButton.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
-                        holder.notification.going = "No";
+                        holder.eventInvite.going = "No";
                         JSONObject jsonObject = new JSONObject();
                         try {
-                            jsonObject.put("going", "'" + holder.notification.going + "'");
-                            jsonObject.put("invitee_id", "'" + holder.notification.inviteeId + "'");
-                            jsonObject.put("event_id", "'" + holder.notification.eventId + "'");
+                            jsonObject.put("going", "'" + holder.eventInvite.going + "'");
+                            jsonObject.put("invitee_id", "'" + holder.eventInvite.inviteeId + "'");
+                            jsonObject.put("event_id", "'" + holder.eventInvite.eventId + "'");
                         } catch (JSONException e) {
                             e.printStackTrace();
                         }
-                        new UpdateNotificationTask().execute(new Pair<>(UPDATE_GOING_PHP_PATH, new
+                        new UpdateEventTask().execute(new Pair<>(UPDATE_GOING_PHP_PATH, new
                                 Pair<>(holder, jsonObject)));
                     }
                 });
@@ -219,23 +216,23 @@ public class EventsFragment extends Fragment implements LoaderManager.LoaderCall
 
         @Override
         public int getItemCount() {
-            if (eventDetailClasses != null) {
+            if (eventInviteClasses != null) {
                 switch (tab) {
                     case ALL:
-                        return eventDetailClasses.all.size();
+                        return eventInviteClasses.all.size();
                     case MY_EVENTS:
-                        return eventDetailClasses.myEvents.size();
+                        return eventInviteClasses.myEvents.size();
                     case INVITED:
-                        return eventDetailClasses.invited.size();
+                        return eventInviteClasses.invited.size();
                     case SUGGESTED:
-                        return eventDetailClasses.suggested.size();
+                        return eventInviteClasses.suggested.size();
                 }
             }
             return 0;
         }
 
         public void setData(Cursor cursor, String userId) {
-            eventDetailClasses = new EventDetailClasses(cursor, userId);
+            eventInviteClasses = new EventInviteClasses(cursor, userId);
             notifyDataSetChanged();
         }
 
@@ -245,37 +242,35 @@ public class EventsFragment extends Fragment implements LoaderManager.LoaderCall
         }
     }
 
-    private class UpdateNotificationTask extends ShoutApplication
-            .SendAndReceiveJSON<EventsAdapter.ViewHolder> {
+    private class UpdateEventTask extends SendAndReceiveJSON<EventsAdapter.ViewHolder> {
 
         @Override
         public void onPostExecute(Pair<EventsAdapter.ViewHolder, JSONObject> pair) {
             try {
                 if (pair.second.getString("update").equals("Success!")) {
-                    EventDetails notification = pair.first.notification;
+                    EventInvite eventInvite = pair.first.eventInvite;
                     ContentValues contentValues = new ContentValues();
-                    contentValues.put(Invite.COLUMN_INVITEE_ID, notification.inviteeId);
-                    contentValues.put(Invite.COLUMN_EVENT_ID, notification.eventId);
-                    contentValues.put(Invite.COLUMN_TYPE, notification.type);
-                    contentValues.put(Invite.COLUMN_GOING, notification.going);
-                    contentValues.put(Invite.COLUMN_SENT, notification.sent);
+                    contentValues.put(Invite.COLUMN_INVITEE_ID, eventInvite.inviteeId);
+                    contentValues.put(Invite.COLUMN_EVENT_ID, eventInvite.eventId);
+                    contentValues.put(Invite.COLUMN_TYPE, eventInvite.type);
+                    contentValues.put(Invite.COLUMN_GOING, eventInvite.going);
+                    contentValues.put(Invite.COLUMN_SENT, eventInvite.sent);
                     int rows = getContext().getContentResolver().update(NotificationsProvider
                             .INVITE_URI, contentValues, Invite.COLUMN_INVITEE_ID + "= ? AND " +
-                            Invite.COLUMN_EVENT_ID + " = ?", new String[]{notification.inviteeId,
-                            notification.eventId});
+                            Invite.COLUMN_EVENT_ID + " = ?", new String[]{eventInvite.inviteeId,
+                            eventInvite.eventId});
                     if (rows > 0) {
-                        EventsAdapter adapter = (EventsAdapter) eventsRecyclerView
-                                .getAdapter();
+                        EventsAdapter adapter = (EventsAdapter) eventsRecyclerView.getAdapter();
                         int position = eventsRecyclerView.getChildAdapterPosition(pair.first.view);
                         switch (adapter.tab) {
                             case ALL:
-                                adapter.eventDetailClasses.all.remove(position);
+                                adapter.eventInviteClasses.all.remove(position);
                             case MY_EVENTS:
-                                adapter.eventDetailClasses.myEvents.remove(position);
+                                adapter.eventInviteClasses.myEvents.remove(position);
                             case INVITED:
-                                adapter.eventDetailClasses.invited.remove(position);
+                                adapter.eventInviteClasses.invited.remove(position);
                             case SUGGESTED:
-                                adapter.eventDetailClasses.suggested.remove(position);
+                                adapter.eventInviteClasses.suggested.remove(position);
                         }
                         adapter.notifyItemRemoved(position);
                         Toast.makeText(getContext(), "Success!", Toast.LENGTH_LONG).show();
