@@ -26,11 +26,14 @@ repositories {
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
     testCompile 'junit:junit:4.12'
-    compile 'com.android.support:gridlayout-v7:24.0.0'
-    compile 'com.android.support:appcompat-v7:24.0.0'
-    compile 'com.android.support:design:24.0.0'
+    compile 'com.android.support:gridlayout-v7:24.1.1'
+    compile 'com.android.support:appcompat-v7:24.1.1'
+    compile 'com.android.support:design:24.1.1'
     compile 'com.facebook.android:facebook-android-sdk:4.13.1'
     compile 'com.google.android:flexbox:0.2.2'
-    compile 'com.android.support:preference-v14:24.0.0'
+    compile 'com.android.support:preference-v14:24.1.1'
     compile 'com.android.support:support-v13:24.1.1'
+    compile 'com.google.firebase:firebase-messaging:9.2.1'
 }
+
+apply plugin: 'com.google.gms.google-services'

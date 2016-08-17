@@ -26,7 +26,6 @@ import com.shout.notificationsProvider.ShoutDatabaseDescription.Invite;
 public class NotificationsSyncAdapter extends AbstractThreadedSyncAdapter {
     private final String SYNC_DATA_PHP = "http://shouttestserver.ueuo.com/sync.php";
 
-
     public NotificationsSyncAdapter(Context context, boolean autoInitialize, boolean
             allowParallelSyncs) {
         super(context, autoInitialize, allowParallelSyncs);

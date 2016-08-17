@@ -8,8 +8,8 @@ $password = 'Auremest7';
 
 $data = file_get_contents ( 'php://input' );
 $json = json_decode ( $data, true );
-$user_id = $json ['user_id'];
-$search_query = $json ['search_query'];
+$user_id = "'$json ['user_id']'";
+$search_query = "'$json ['search_query']'";
 $offset = $json ['offset'];
 $query_type = $json ['query_type'];
 $events_result = $friends_result = $groups_result = TRUE;

@@ -10,15 +10,14 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
-import com.shout.applications.ShoutApplication.SendAndReceiveJSON;
+import com.shout.applications.ShoutApplication;
+import com.shout.applications.ShoutApplication.SearchClasses;
 import com.shout.R;
-import com.shout.wrapperClasses.WrapperClasses.*;
-
 
 import org.json.JSONException;
 import org.json.JSONObject;
-
 
 public class SearchFragment extends Fragment {
     private final String SEARCH_PHP_PATH = "http://shouttestserver.ueuo.com/search.php";
@@ -28,29 +27,32 @@ public class SearchFragment extends Fragment {
     private RecyclerView resultsView;
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle
+            savedInstanceState) {
         View view = inflater.inflate(R.layout.search_fragment, container, false);
         JSONObject jsonObject = new JSONObject();
+        String query = getActivity().getIntent().getStringExtra("userId");
         try {
-            jsonObject.put("user_id", "'" + getActivity().getIntent().getStringExtra("userId") +
-                    "'");
-            jsonObject.put("search_query", "'" + getArguments().getString("query") + "'");
+            jsonObject.put("user_id", query);
+            jsonObject.put("search_query", getArguments().getString("query"));
             jsonObject.put("offset", "0");
             jsonObject.put("query_type", "All");
+            Pair<Void, JSONObject> pair = new Pair<>(null, jsonObject);
+            new SearchTask().execute(new Pair<>(SEARCH_PHP_PATH, pair));
         } catch (JSONException e) {
             e.printStackTrace();
         }
 
+        ((TextView) view.findViewById(R.id.query_textView)).setText("Search results for " + query);
         resultsView = (RecyclerView) view.findViewById(R.id.results_recyclerView);
         TabLayout resultsTabs = (TabLayout) view.findViewById(R.id.results_tabLayout);
-        resultsView.setLayoutManager(new LinearLayoutManager(getActivity()));
-        resultsView.setAdapter(new ResultsAdapter());
+        resultsView.setLayoutManager(new LinearLayoutManager(getContext()));
+        resultsView.setAdapter(new SearchResultsAdapter());
 
         resultsTabs.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
             @Override
             public void onTabSelected(TabLayout.Tab tab) {
-                ((ResultsAdapter) resultsView.getAdapter()).changeTab(tab.getPosition());
+                ((SearchResultsAdapter) resultsView.getAdapter()).changeTab(tab.getPosition());
             }
 
             @Override
@@ -61,45 +63,27 @@ public class SearchFragment extends Fragment {
             public void onTabReselected(TabLayout.Tab tab) {
             }
         });
-
-        Pair<Void, JSONObject> pair = new Pair<>(null, jsonObject);
-        new SearchTask().execute(new Pair<>(SEARCH_PHP_PATH, pair));
-
-        /*ArrayList<String> phoneNumbersCollection = new ArrayList<>();
-        ContentResolver contentResolver = getContext().getContentResolver();
-        Cursor phoneCursor = contentResolver.query(ContactsContract
-                .CommonDataKinds.Phone.CONTENT_URI, null, null, null, null);
-
-        while (phoneCursor.moveToNext()) {
-            String phoneNumber = phoneCursor.getString(phoneCursor.getColumnIndex
-                    (ContactsContract.CommonDataKinds.Phone.DATA));
-            phoneNumbersCollection.add(phoneNumber);
-        }
-
-        phoneCursor.close();
-        String[] emailAddresses = new String[phoneNumbersCollection.size()];
-        phoneNumbersCollection.toArray(emailAddresses);
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(getContext(),
-                R.layout.search_fragment, R.id.friendsAndGroups_textView,
-                emailAddresses);
-        AutoCompleteTextView textView = (AutoCompleteTextView) view.findViewById(R.id
-                .friendsAndGroups_textView);
-        textView.setAdapter(adapter);*/
         return view;
     }
 
-    private class SearchTask extends SendAndReceiveJSON<Void> {
+    private class SearchTask extends ShoutApplication.SendAndReceiveJSON<Void> {
         @Override
         protected void onPostExecute(Pair<Void, JSONObject> pair) {
             try {
-                ((ResultsAdapter) resultsView.getAdapter()).setData(pair.second);
+                if (pair.second.getString("insert").equals("Success!")) {
+                    ((SearchResultsAdapter) resultsView.getAdapter()).setData(pair.second);
+                } else {
+                    String remoteError = pair.second.getString("error_message");
+                    Toast.makeText(getContext(), remoteError, Toast.LENGTH_LONG).show();
+                }
             } catch (JSONException e) {
                 e.printStackTrace();
             }
         }
     }
 
-    private class ResultsAdapter extends RecyclerView.Adapter<ResultsAdapter.ViewHolder> {
+    private class SearchResultsAdapter extends RecyclerView.Adapter<SearchResultsAdapter
+            .ViewHolder> {
         private int tab = 0;
         public SearchClasses searchClasses;
 
@@ -113,13 +97,13 @@ public class SearchFragment extends Fragment {
         }
 
         @Override
-        public ResultsAdapter.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+        public SearchResultsAdapter.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
             return new ViewHolder(LayoutInflater.from(parent.getContext()).inflate(R.layout
                     .search_result, parent, false));
         }
 
         @Override
-        public void onBindViewHolder(ResultsAdapter.ViewHolder holder, int position) {
+        public void onBindViewHolder(SearchResultsAdapter.ViewHolder holder, int position) {
             if (searchClasses != null) {
                 try {
                     TextView name = (TextView) holder.view.findViewById(R.id.name_textView);
@@ -130,6 +114,12 @@ public class SearchFragment extends Fragment {
                             data = searchClasses.eventInvites.getJSONObject(position);
                             name.setText(data.getString("title"));
                             type.setText("Event");
+                            holder.view.setOnClickListener(new View.OnClickListener() {
+                                @Override
+                                public void onClick(View view) {
+
+                                }
+                            });
                             break;
                         case PERSONS:
                             data = searchClasses.persons.getJSONObject(position);

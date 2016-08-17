@@ -8,48 +8,56 @@ $password = 'Auremest7';
 
 $data = file_get_contents ( 'php://input' );
 $json = json_decode ( $data, true );
-
-$creator_id = $json ['creator_id'];
-$title = $json ['title'];
-$location = $json ['location'];
-$description = $json ['description'];
-$start_datetime = $json ['start_datetime'];
-$end_datetime = $json ['end_datetime'];
-$tag = $json ['tag'];
-$shout = $json ['shout'];
+$new_event = $json ['new_event'];
+$event_id = "'" . $json ['event_id'] . "'";
+$creator_id = "'" . $json ['creator_id'] . "'";
+$title = "'" . $json ['title'] . "'";
+$location = "'" . $json ['location'] . "'";
+$description = "'" .$json ['description'] . "'";
+$start_datetime = "'" . $json ['start_datetime'] . "'";
+$end_datetime = "'" . $json ['end_datetime'] . "'";
+$tag = "'" . $json ['tag'] . "'";
+$shout = "'" . $json ['shout'] . "'";
+$invitees = $json ['invitees'];
 
 $connection = mysqli_connect ( $host_name, $user_name, $password, $user_name );
-$query = "INSERT INTO Event (creator_id, title, location, description,
+if ($new_event != "Yes"){
+	$first = "event_id,";
+	$second = "$event_id,";
+}
+
+$query = "INSERT INTO Event ($first creator_id, title, location, description,
 start_datetime, end_datetime, tag, shout) VALUES 
-($creator_id, $title, $location, $description, $start_datetime, $end_datetime,
-$tag, $shout)";
+($second $creator_id, $title, $location, $description, $start_datetime,
+$end_datetime, $tag, $shout) ON DUPLICATE KEY UPDATE
+event_id = LAST_INSERT_ID(event_id), creator_id = $creator_id, title = $title, 
+location = $location, description = $description, start_datetime = $start_datetime,
+end_datetime = $end_datetime, tag = $tag, shout = $shout";
 $create_event = mysqli_query ( $connection, $query );
 
-$event_id = $connection->insert_id;
-$new_event_id = "'" . $event_id . "'";
-$invitees = $json ['invitees'];
-$type = "'Invite'";
-$going = "'Unset'";
-$sent = "'No'";
-$query = "INSERT INTO Invite (invitee_id, event_id, type, going, sent) VALUES";
+$new_event_id = "'" . $connection->insert_id . "'";
+$query = "INSERT INTO Invite (invitee_id, event_id, type, going, sent) VALUES ";
 $create_invite = true;
 
 for($index = 0; $index < count ( $invitees ); $index ++) {
-	$invitee_id = $invitees [$index];
-	$my_query = $query . "($invitee_id, $new_event_id, $type, $going, $sent)";
+	$invitee_id = "'" . $invitees [$index] . "'";
+	$my_query = $query . "($invitee_id, $new_event_id, 'Invite', 'Unset', 'No')
+	ON DUPLICATE KEY UPDATE invitee_id = invitee_id, event_id = event_id";
 	$create_invite = $create_invite && mysqli_query ( $connection, $my_query );
 }
 
 if ($create_event && $create_invite) {
+	$select_query = "SELECT DISTINCT * FROM Event WHERE Event.event_id = $new_event_id";
+	$select_result = mysqli_query ( $connection, $select_query );
 	echo json_encode ( array (
 			'insert' => "Success!",
-			'event_id' => $event_id,
-			'error_message' => "" 
+			'event_invite' => mysqli_fetch_assoc ( $select_result ),
+			'error_message' => NULL 
 	) );
 } else {
 	echo json_encode ( array (
 			'insert' => "Failure!",
-			'event_id' => "0",
+			'event_invite' => NULL,
 			'error_message' => mysqli_error ( $connection ) 
 	) );
 }

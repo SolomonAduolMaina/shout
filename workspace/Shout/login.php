@@ -8,10 +8,10 @@ $db_password = 'Auremest7';
 
 $data = file_get_contents ( 'php://input' );
 $json = json_decode ( $data, true );
-$user_name = $json ['user_name'];
-$facebook_id = $json ['facebook_id'];
-$password = $json ['password'];
-$email_address = $json ['email_address'];
+$user_name = "'" . $json ['user_name'] . "'";
+$facebook_id = "'" . $json ['facebook_id'] . "'";
+$password = "'" . $json ['password'] . "'";
+$email_address = "'" . $json ['email_address'] . "'";
 $new_user = $json ['new_user'];
 $login_type = $json ['login_type'];
 $facebook_friends = $json ['facebook_friends'];
@@ -81,13 +81,15 @@ if (! $result) {
 			echo json_encode ( array (
 					'insert' => "Failure!",
 					'error_message' => "User with that email address already exists",
-					'token' => NULL 
+					'token' => NULL,
+					'friends' => NULL 
 			) );
 		} else {
 			echo json_encode ( array (
 					'insert' => "Failure!",
 					'error_message' => "Password Incorrect",
-					'token' => NULL 
+					'token' => NULL,
+					'friends' => NULL 
 			) );
 		}
 	} else {
@@ -95,23 +97,43 @@ if (! $result) {
 			echo json_encode ( array (
 					'insert' => "Failure!",
 					'error_message' => "User does not exist",
-					'token' => NULL 
+					'token' => NULL,
+					'friends' => NULL 
 			) );
 		} else {
 			echo json_encode ( array (
 					'insert' => "Failure!",
 					'error_message' => mysqli_error ( $connection ),
-					'token' => NULL 
+					'token' => NULL,
+					'friends' => NULL 
 			) );
 		}
 	}
 } else {
 	$select_query = "SELECT DISTINCT * FROM User WHERE user_id = $insert_id";
 	$select_result = mysqli_query ( $connection, $select_query );
-	echo json_encode ( array (
-			'insert' => "Success!",
-			'error_message' => NULL,
-			'token' => mysqli_fetch_assoc ( $select_result ) 
-	) );
+	$friends_query = "SELECT DISTINCT Connection.friend_id, User.user_name
+	FROM Connection INNER JOIN User ON Connection.friend_id = User.user_id
+	WHERE Connection.user_id = $insert_id";
+	$friends_result = mysqli_query ( $connection, $friends_query );
+	if ($friends_result != FALSE) {
+		$friends = array ();
+		while ( $row = mysqli_fetch_assoc ( $friends_result ) ) {
+			array_push ( $friends, $row );
+		}
+		echo json_encode ( array (
+				'insert' => "Success!",
+				'error_message' => NULL,
+				'token' => mysqli_fetch_assoc ( $select_result ),
+				'friends' => $friends 
+		) );
+	} else {
+		echo json_encode ( array (
+				'insert' => "Failure!",
+				'error_message' => mysqli_error ( $connection ),
+				'token' => NULL,
+				'friends' => NULL 
+		) );
+	}
 }
 ?>

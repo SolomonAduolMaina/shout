@@ -1,0 +1,52 @@
+<?php
+
+// API Url
+$url = "http=>//shouttestserver.ueuo.com/login.php";
+
+// Initiate cURL.
+$ch = curl_init ( $url );
+
+// The JSON data.
+$jsonData = array (
+		"new_user" => "No",
+		"user_name" => "Open Graph Test User",
+		"facebook_id" => "127108817718933",
+		"password" => null,
+		"facebook_friends" => array (
+	array("id" => "125750104521605",
+			"name"=>"Mike Alabeihdhgejh Greenesky"), 
+				array("id"=>"115745832191073",
+						"name"=>"David Alabffigjaedd Liangberg"), 
+				array ("id"=>"109240536176581",
+						"name"=>"David Alabgaijdgfed Lauson"),
+		array ("id"=>"107673046333678","name"=>"Carol Alabgbidhfefh Chengescu")),
+		"email_address" =>null,
+		"login_type"=>"Facebook"
+);
+
+// Encode the array into JSON.
+$jsonDataEncoded = json_encode ( $jsonData );
+
+// Tell cURL that we want to send a POST request.
+curl_setopt ( $ch, CURLOPT_POST, 1 );
+
+// Attach our encoded JSON string to the POST fields.
+curl_setopt ( $ch, CURLOPT_POSTFIELDS, $jsonDataEncoded );
+
+// Set the content type to application/json
+curl_setopt ( $ch, CURLOPT_HTTPHEADER, array (
+		'Content-Type: application/json'
+) );
+
+// Receive data back
+curl_setopt ( $ch, CURLOPT_RETURNTRANSFER, true );
+
+// Execute the request
+$result = curl_exec ( $ch );
+
+echo $result;
+
+// Close the channel
+curl_close ( $ch );
+
+?>

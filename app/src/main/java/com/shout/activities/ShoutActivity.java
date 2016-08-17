@@ -19,15 +19,12 @@ import com.facebook.AccessToken;
 import com.facebook.AccessTokenTracker;
 import com.shout.R;
 import com.shout.fragments.CreateEventFragment;
-import com.shout.fragments.EventsFragment;
+import com.shout.fragments.MyEventsFragment;
 import com.shout.fragments.SearchFragment;
 
 public class ShoutActivity extends AppCompatActivity implements SearchView.OnQueryTextListener {
-
-
     public final static String ACTION_FINISHED_SYNC = "com.shout.ACTION_FINISHED_SYNC";
-    public static IntentFilter syncIntentFilter = new IntentFilter(ACTION_FINISHED_SYNC);
-
+    public final static IntentFilter syncIntentFilter = new IntentFilter(ACTION_FINISHED_SYNC);
     private AccessTokenTracker tokenTracker;
     private final AppCompatActivity THIS_INSTANCE = this;
     private SearchView searchView;
@@ -62,7 +59,7 @@ public class ShoutActivity extends AppCompatActivity implements SearchView.OnQue
             }
         });
 
-        EventsFragment eventsFragment = new EventsFragment();
+        MyEventsFragment eventsFragment = new MyEventsFragment();
         getSupportFragmentManager().beginTransaction().add(R.id.fragment, eventsFragment).commit();
     }
 

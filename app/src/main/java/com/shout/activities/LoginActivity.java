@@ -6,6 +6,7 @@ import android.accounts.AccountManager;
 import android.content.ContentResolver;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.util.Pair;
 import android.view.View;
 import android.widget.Button;
@@ -21,6 +22,7 @@ import com.facebook.GraphRequest.GraphJSONObjectCallback;
 import com.facebook.GraphResponse;
 import com.facebook.login.LoginManager;
 import com.facebook.login.LoginResult;
+import com.google.firebase.iid.FirebaseInstanceId;
 import com.shout.R;
 import com.shout.applications.ShoutApplication;
 import com.shout.notificationsProvider.NotificationsProvider;
@@ -31,11 +33,10 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 
-
 public class LoginActivity extends AccountAuthenticatorActivity {
-
     private final String LOGIN_PHP_PATH = "http://shouttestserver.ueuo.com/login.php";
     private final String ACCOUNT_TYPE = "http://shouttestserver.ueuo.com";
+    private final String SEND_TOKEN_PHP_PATH = "http://shouttestserver.ueuo.com/send_message.php";
     private final AccountAuthenticatorActivity THIS_INSTANCE = this;
     private CallbackManager callbackManager;
     private AccountManager accountManager;
@@ -53,31 +54,23 @@ public class LoginActivity extends AccountAuthenticatorActivity {
                     @Override
                     public void onCompleted(JSONObject object, GraphResponse response) {
                         JSONObject jsonObject = new JSONObject();
-                        ArrayList<String> friendIds = new ArrayList<>();
-                        ArrayList<String> friendNames = new ArrayList<>();
                         try {
                             jsonObject.put("login_type", "Facebook");
-                            jsonObject.put("user_name", "'" + object.getString("name") + "'");
-                            jsonObject.put("password", "''");
-                            jsonObject.put("email_address", "''");
-                            jsonObject.put("facebook_id", "'" + object.getString("id") + "'");
-                            jsonObject.put("new_user", "''");
+                            jsonObject.put("user_name", object.getString("name"));
+                            jsonObject.put("password", JSONObject.NULL);
+                            jsonObject.put("email_address", JSONObject.NULL);
+                            jsonObject.put("facebook_id", object.getString("id"));
+                            jsonObject.put("new_user", JSONObject.NULL);
                             JSONObject friendsObject = object.getJSONObject("friends");
-                            JSONArray jsonArray = friendsObject.getJSONArray("data");
                             jsonObject.put("facebook_friends", friendsObject.getJSONArray("data"));
-                            for (int i = 0; i < jsonArray.length(); i++) {
-                                JSONObject friend = jsonArray.getJSONObject(i);
-                                friendIds.add(friend.getString("id"));
-                                friendNames.add(friend.getString("name"));
-                            }
+                            Intent intent = new Intent(THIS_INSTANCE, ShoutActivity.class);
+                            Pair<Intent, JSONObject> pair = new Pair<>(intent, jsonObject);
+
+                            new LoginTask().execute(new Pair<>(LOGIN_PHP_PATH, pair));
                         } catch (JSONException e) {
                             e.printStackTrace();
                         }
-                        Intent intent = new Intent(THIS_INSTANCE, ShoutActivity.class);
-                        intent.putStringArrayListExtra("friendIds", friendIds);
-                        intent.putStringArrayListExtra("friendNames", friendNames);
-                        Pair<Intent, JSONObject> pair = new Pair<>(intent, jsonObject);
-                        new LoginTask().execute(new Pair<>(LOGIN_PHP_PATH, pair));
+
                     }
                 };
 
@@ -117,24 +110,23 @@ public class LoginActivity extends AccountAuthenticatorActivity {
                 try {
                     boolean isSignUp = view == signUpButton;
                     jsonObject.put("new_user", isSignUp ? "Yes" : "No");
-                    String userName = isSignUp ? "'" + usernameEditText.getText().toString() +
-                            "'" : "";
-                    jsonObject.put("user_name", userName);
-                    String password = isSignUp ? "'" + passwordEditText.getText().toString() +
-                            "'" : "'" + password2EditText.getText().toString() + "'";
+                    jsonObject.put("user_name", isSignUp ? usernameEditText.getText().toString()
+                            : JSONObject.NULL);
+                    String password = isSignUp ? passwordEditText.getText().toString() :
+                            password2EditText.getText().toString();
                     jsonObject.put("password", password);
-                    String emailAddress = isSignUp ? "'" + emailEditText.getText().toString() +
-                            "'" : "'" + email2EditText.getText().toString() + "'";
+                    String emailAddress = isSignUp ? emailEditText.getText().toString() :
+                            email2EditText.getText().toString();
                     jsonObject.put("email_address", emailAddress);
-                    jsonObject.put("facebook_id", "");
-                    jsonObject.put("facebook_friends", new JSONArray());
+                    jsonObject.put("facebook_id", JSONObject.NULL);
+                    jsonObject.put("facebook_friends", JSONObject.NULL);
                     jsonObject.put("login_type", "Shout");
+                    Intent intent = new Intent(THIS_INSTANCE, ShoutActivity.class);
+                    Pair<Intent, JSONObject> pair = new Pair<>(intent, jsonObject);
+                    new LoginTask().execute(new Pair<>(LOGIN_PHP_PATH, pair));
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
-                Intent intent = new Intent(THIS_INSTANCE, ShoutActivity.class);
-                Pair<Intent, JSONObject> pair = new Pair<>(intent, jsonObject);
-                new LoginTask().execute(new Pair<>(LOGIN_PHP_PATH, pair));
             }
         };
 
@@ -142,34 +134,46 @@ public class LoginActivity extends AccountAuthenticatorActivity {
         signInButton.setOnClickListener(onClickListener);
     }
 
-
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         callbackManager.onActivityResult(requestCode, resultCode, data);
     }
 
-
     private class LoginTask extends ShoutApplication.SendAndReceiveJSON<Intent> {
+        @Override
+        protected Pair<Intent, JSONObject> doInBackground(Pair<String, Pair<Intent, JSONObject>>...
+                                                                  args) {
+            try {
+                JSONObject jsonObject = new JSONObject();
+                jsonObject.put("registrationId", FirebaseInstanceId.getInstance().getToken());
+                Pair<String, JSONObject> pair = new Pair<>(SEND_TOKEN_PHP_PATH, jsonObject);
+                JSONObject serverResponse = ShoutApplication.getJsonResponse(pair);
+                Log.v("MyTag", serverResponse.toString());
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+            return super.doInBackground(args);
+        }
+
 
         @Override
         protected void onPostExecute(Pair<Intent, JSONObject> pair) {
-            Intent intent = pair.first;
             JSONObject response = pair.second;
             try {
-                String insert = response.getString("insert");
-                if (insert.equals("Success!")) {
+                if (response.getString("insert").equals("Success!")) {
                     JSONObject token = response.getJSONObject("token");
                     String userName = token.getString("user_name");
                     String password = token.getString("password");
                     Account account = new Account(userName, ACCOUNT_TYPE);
+                    accountManager.addAccountExplicitly(account, password, null);
                     accountManager.setAuthToken(account, "InsertRow", token.toString());
                     accountManager.setPassword(account, password);
 
                     Bundle bundle = new Bundle();
                     bundle.putBoolean(ContentResolver.SYNC_EXTRAS_MANUAL, true);
                     bundle.putBoolean(ContentResolver.SYNC_EXTRAS_EXPEDITED, true);
-                    bundle.putString("userId", "'" + token.getString("user_id") + "'");
+                    bundle.putString("userId", token.getString("user_id"));
                     ContentResolver.requestSync(account, NotificationsProvider.AUTHORITY, bundle);
 
                     Intent result = new Intent();
@@ -178,9 +182,24 @@ public class LoginActivity extends AccountAuthenticatorActivity {
                     result.putExtra(AccountManager.KEY_AUTHTOKEN, token.toString());
                     setAccountAuthenticatorResult(result.getExtras());
                     setResult(RESULT_OK, result);
+
+                    JSONArray jsonArray = response.getJSONArray("friends");
+                    ArrayList<String> friendIds = new ArrayList<>();
+                    ArrayList<String> friendNames = new ArrayList<>();
+                    for (int i = 0; i < jsonArray.length(); i++) {
+                        JSONObject friend = jsonArray.getJSONObject(i);
+                        friendIds.add(friend.getString("friend_id"));
+                        friendNames.add(friend.getString("user_name"));
+                    }
+
+                    Intent intent = pair.first;
                     intent.putExtra("userId", token.getString("user_id"));
+                    intent.putStringArrayListExtra("friendIds", friendIds);
+                    intent.putStringArrayListExtra("friendNames", friendNames);
                     startActivity(intent);
                     finish();
+                    Toast.makeText(getBaseContext(), "Success!", Toast.LENGTH_LONG).show();
+
                 } else {
                     String error_message = response.getString("error_message");
                     Toast.makeText(getBaseContext(), error_message, Toast.LENGTH_LONG).show();

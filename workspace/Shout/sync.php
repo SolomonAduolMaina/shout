@@ -8,7 +8,7 @@ $password = 'Auremest7';
 
 $data = file_get_contents ( 'php://input' );
 $json = json_decode ( $data, true );
-$user_id = $json ['userId'];
+$user_id = "'$json ['userId']'";
 $connection = mysqli_connect ( $host_name, $user_name, $password, $user_name );
 
 $events_query = "SELECT DISTINCT Event.* FROM Event LEFT OUTER JOIN Invite ON 

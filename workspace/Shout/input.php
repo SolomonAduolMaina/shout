@@ -1,17 +1,23 @@
 <?php
-
 // API Url
-$url = 'http://shouttestserver.ueuo.com/search.php';
+$url = 'http://shouttestserver.ueuo.com/create_event.php';
 
 // Initiate cURL.
 $ch = curl_init ( $url );
 
 // The JSON data.
 $jsonData = array (
-		'user_id' => "'5'",
-		'search_query' => "'Test'",
-		'offset' => "0",
-		'query_type' => "All"
+		'title' => "Wimbledon Final",
+		'new_event' => "No",
+		'end_datetime' => "2016:07:13:8:30",
+		'location' => "SW19",
+		'description' => "should be cracking",
+		'tag' => "Tennis",
+		'event_id' => "1",
+		'shout' => "true",
+		'invitees' => array(),
+		'creator_id' => "5",
+		'start_datetime' => "2016:07:13:8:0",
 );
 
 // Encode the array into JSON.

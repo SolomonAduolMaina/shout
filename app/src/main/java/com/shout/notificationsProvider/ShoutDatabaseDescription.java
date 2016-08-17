@@ -6,8 +6,6 @@ package com.shout.notificationsProvider;
 import android.provider.BaseColumns;
 
 public class ShoutDatabaseDescription {
-
-
     public static final class Invite implements BaseColumns {
         public static final String INVITE = "Invite";
         public static final String COLUMN_INVITEE_ID = "invitee_id";

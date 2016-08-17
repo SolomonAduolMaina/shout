@@ -34,10 +34,12 @@ public class NotificationsProvider extends ContentProvider {
     private static final int EVENT_CONSTANT = 2;
     private static final int ONE_EVENT_CONSTANT = 3;
     private static final int MY_EVENTS_CONSTANT = 4;
+    private static final int ONE_INVITE_CONSTANT = 5;
 
     static {
         uriMatcher.addURI(AUTHORITY, "Notifications", NOTIFICATIONS_CONSTANT);
         uriMatcher.addURI(AUTHORITY, Invite.INVITE, INVITE_CONSTANT);
+        uriMatcher.addURI(AUTHORITY, Invite.INVITE + "/#", ONE_INVITE_CONSTANT);
         uriMatcher.addURI(AUTHORITY, Event.EVENT, EVENT_CONSTANT);
         uriMatcher.addURI(AUTHORITY, Event.EVENT + "/#", ONE_EVENT_CONSTANT);
         uriMatcher.addURI(AUTHORITY, "MyEvents", MY_EVENTS_CONSTANT);
@@ -61,23 +63,22 @@ public class NotificationsProvider extends ContentProvider {
     @Override
     public Cursor query(Uri uri, String[] projection, String selection, String[] selectionArgs,
                         String sortOrder) {
-
         SQLiteQueryBuilder queryBuilder = new SQLiteQueryBuilder();
         Cursor cursor;
         String SQL;
         switch (uriMatcher.match(uri)) {
             case NOTIFICATIONS_CONSTANT:
-                SQL = "Event LEFT OUTER JOIN Invite on (Invite.event_id = Event.event_id)";
+                SQL = "Event LEFT OUTER JOIN Invite on Event.event_id = Invite.event_id";
                 queryBuilder.setTables(SQL);
-                String[] s = new String[]{Invite.INVITE + ".*", Event.COLUMN_CREATOR_ID, Event
-                        .COLUMN_TITLE, Event.COLUMN_LOCATION, Event.COLUMN_DESCRIPTION, Event
-                        .COLUMN_START_DATETIME, Event.COLUMN_END_DATETIME, Event.COLUMN_TAG,
-                        Event.COLUMN_SHOUT};
-                cursor = queryBuilder.query(dbHelper.getReadableDatabase(),
-                        s, selection, selectionArgs, null, null, sortOrder);
+                String[] columns = new String[]{"Event.*", "Invite." + Invite.COLUMN_INVITEE_ID,
+                        "Invite." + Invite.COLUMN_TYPE, "Invite." + Invite.COLUMN_GOING, "Invite" +
+                        "." + Invite.COLUMN_SENT};
+                cursor = queryBuilder.query(dbHelper.getReadableDatabase(), columns, selection,
+                        selectionArgs, null, null, sortOrder);
                 cursor.setNotificationUri(getContext().getContentResolver(), uri);
                 return cursor;
-            case EVENT_CONSTANT | ONE_EVENT_CONSTANT:
+            case EVENT_CONSTANT:
+            case ONE_EVENT_CONSTANT:
                 queryBuilder.setTables("Event");
                 cursor = queryBuilder.query(dbHelper.getReadableDatabase(),
                         projection, selection, selectionArgs, null, null, sortOrder);
@@ -120,9 +121,9 @@ public class NotificationsProvider extends ContentProvider {
         Context context = getContext();
         ContentResolver resolver = context.getContentResolver();
         Uri result;
-
         switch (uriMatcher.match(uri)) {
             case INVITE_CONSTANT:
+            case ONE_INVITE_CONSTANT:
                 long rowId = db.insertWithOnConflict(Invite.INVITE, null, contentValues,
                         SQLiteDatabase.CONFLICT_REPLACE);
                 if (rowId > 0) {
@@ -132,7 +133,7 @@ public class NotificationsProvider extends ContentProvider {
                     throw new SQLException(INSERT_FAILED + uri);
                 break;
             case EVENT_CONSTANT:
-
+            case ONE_EVENT_CONSTANT:
                 rowId = db.insertWithOnConflict(Event.EVENT, null, contentValues, SQLiteDatabase
                         .CONFLICT_REPLACE);
                 if (rowId > 0) {
@@ -179,19 +180,32 @@ public class NotificationsProvider extends ContentProvider {
     public int update(Uri uri, ContentValues contentValues, String selection, String[]
             selectionArgs) {
         int numberOfRowsUpdated;
-
         switch (uriMatcher.match(uri)) {
             case INVITE_CONSTANT:
+            case ONE_INVITE_CONSTANT:
                 numberOfRowsUpdated = dbHelper.getWritableDatabase().update(Invite.INVITE,
                         contentValues, selection, selectionArgs);
+                if (numberOfRowsUpdated != 0) {
+                    getContext().getContentResolver().notifyChange(uri, null);
+                } else {
+                    Uri insert = insert(uri, contentValues);
+                    numberOfRowsUpdated = update(insert, contentValues, selection, selectionArgs);
+                }
+                break;
+            case EVENT_CONSTANT:
+            case ONE_EVENT_CONSTANT:
+                numberOfRowsUpdated = dbHelper.getWritableDatabase().update(Event.EVENT,
+                        contentValues, selection, selectionArgs);
+                if (numberOfRowsUpdated != 0) {
+                    getContext().getContentResolver().notifyChange(uri, null);
+                } else {
+                    Uri insert = insert(uri, contentValues);
+                    numberOfRowsUpdated = update(insert, contentValues, selection, selectionArgs);
+                }
                 break;
             default:
                 throw new UnsupportedOperationException(
                         getContext().getString(R.string.invalid_update_uri) + uri);
-        }
-
-        if (numberOfRowsUpdated != 0) {
-            getContext().getContentResolver().notifyChange(uri, null);
         }
         return numberOfRowsUpdated;
     }
