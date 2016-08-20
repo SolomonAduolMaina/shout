@@ -1,6 +1,7 @@
 <?php
 error_reporting ( E_ALL );
 ini_set ( 'display_errors', 1 );
+require 'send_message.php';
 
 $host_name = 'localhost';
 $user_name = '987829';
@@ -13,7 +14,7 @@ $event_id = "'" . $json ['event_id'] . "'";
 $creator_id = "'" . $json ['creator_id'] . "'";
 $title = "'" . $json ['title'] . "'";
 $location = "'" . $json ['location'] . "'";
-$description = "'" .$json ['description'] . "'";
+$description = "'" . $json ['description'] . "'";
 $start_datetime = "'" . $json ['start_datetime'] . "'";
 $end_datetime = "'" . $json ['end_datetime'] . "'";
 $tag = "'" . $json ['tag'] . "'";
@@ -21,7 +22,7 @@ $shout = "'" . $json ['shout'] . "'";
 $invitees = $json ['invitees'];
 
 $connection = mysqli_connect ( $host_name, $user_name, $password, $user_name );
-if ($new_event != "Yes"){
+if ($new_event != "Yes") {
 	$first = "event_id,";
 	$second = "$event_id,";
 }
@@ -37,16 +38,29 @@ $create_event = mysqli_query ( $connection, $query );
 
 $new_event_id = "'" . $connection->insert_id . "'";
 $query = "INSERT INTO Invite (invitee_id, event_id, type, going, sent) VALUES ";
-$create_invite = true;
-
+$create_invite = $token_result = true;
+$regIds = array ();
 for($index = 0; $index < count ( $invitees ); $index ++) {
 	$invitee_id = "'" . $invitees [$index] . "'";
+	$token_query = "SELECT registration_id FROM User WHERE user_id = $invitee_id";
+	$token_result = $token_result && mysqli_query ( $connection, $token_query );
+	$token_array = mysqli_fetch_assoc ( $token_result );
+	array_push ( $regIds, $token_array ['registration_id'] );
 	$my_query = $query . "($invitee_id, $new_event_id, 'Invite', 'Unset', 'No')
 	ON DUPLICATE KEY UPDATE invitee_id = invitee_id, event_id = event_id";
 	$create_invite = $create_invite && mysqli_query ( $connection, $my_query );
 }
 
-if ($create_event && $create_invite) {
+$messageData = array (
+		'type' => "New Invite",
+		'data' => array (
+				'event_id' => $new_event_id 
+		) 
+);
+
+$response = json_decode ( sendNotification ( $apiKey, $regIds, $messageData ), true );
+$response_result = $response ['failure'] == 0;
+if ($create_event && $create_invite && $token_result && $response_result) {
 	$select_query = "SELECT DISTINCT * FROM Event WHERE Event.event_id = $new_event_id";
 	$select_result = mysqli_query ( $connection, $select_query );
 	echo json_encode ( array (

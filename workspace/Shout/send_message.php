@@ -31,7 +31,7 @@ function sendNotification($apiKey, $registrationIdsArray, $messageData) {
 	return $response;
 }
 
-// Message to send
+/* Message to send
 
 $message = "the test message";
 $tickerText = "ticker text message";
@@ -52,5 +52,5 @@ $response = sendNotification ( $apiKey, array (
 		"contentText" => $contentText 
 ) );
 
-echo $response;
+echo $response;*/
 ?>

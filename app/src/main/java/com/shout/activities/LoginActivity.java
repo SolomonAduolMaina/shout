@@ -63,6 +63,8 @@ public class LoginActivity extends AccountAuthenticatorActivity {
                             jsonObject.put("new_user", JSONObject.NULL);
                             JSONObject friendsObject = object.getJSONObject("friends");
                             jsonObject.put("facebook_friends", friendsObject.getJSONArray("data"));
+                            jsonObject.put("registrationId", FirebaseInstanceId.getInstance()
+                                     .getToken());
                             Intent intent = new Intent(THIS_INSTANCE, ShoutActivity.class);
                             Pair<Intent, JSONObject> pair = new Pair<>(intent, jsonObject);
 
@@ -121,6 +123,7 @@ public class LoginActivity extends AccountAuthenticatorActivity {
                     jsonObject.put("facebook_id", JSONObject.NULL);
                     jsonObject.put("facebook_friends", JSONObject.NULL);
                     jsonObject.put("login_type", "Shout");
+                    jsonObject.put("registrationId", FirebaseInstanceId.getInstance().getToken());
                     Intent intent = new Intent(THIS_INSTANCE, ShoutActivity.class);
                     Pair<Intent, JSONObject> pair = new Pair<>(intent, jsonObject);
                     new LoginTask().execute(new Pair<>(LOGIN_PHP_PATH, pair));

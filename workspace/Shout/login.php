@@ -12,6 +12,7 @@ $user_name = "'" . $json ['user_name'] . "'";
 $facebook_id = "'" . $json ['facebook_id'] . "'";
 $password = "'" . $json ['password'] . "'";
 $email_address = "'" . $json ['email_address'] . "'";
+$registration_id = "'" . $json ['registration_id'] . "'";
 $new_user = $json ['new_user'];
 $login_type = $json ['login_type'];
 $facebook_friends = $json ['facebook_friends'];
@@ -22,9 +23,10 @@ if ($login_type == "Facebook") {
 	$lookup_query = "SELECT DISTINCT * from User WHERE facebook_id = $facebook_id";
 	$lookup_result = mysqli_query ( $connection, $lookup_query );
 	$user_exists = mysqli_num_rows ( $lookup_result ) > 0;
-	$insert_query = "INSERT INTO User (facebook_id, user_name) VALUES
-	($facebook_id, $user_name) ON DUPLICATE KEY UPDATE user_id = 
-	LAST_INSERT_ID(user_id), user_name = $user_name, facebook_id = $facebook_id";
+	$insert_query = "INSERT INTO User (facebook_id, user_name, registration_id)
+	VALUES ($facebook_id, $user_name, $registration_id) ON DUPLICATE KEY UPDATE 
+	user_id = LAST_INSERT_ID(user_id), user_name = $user_name, facebook_id = 
+	$facebook_id, registration_id = $registration_id";
 	$result = mysqli_query ( $connection, $insert_query );
 	$insert_id = "'$connection->insert_id'";
 	
@@ -53,10 +55,9 @@ if ($login_type == "Facebook") {
 	$user_exists = mysqli_num_rows ( $lookup_result ) > 0;
 	if ($new_user == "Yes") {
 		if (! $user_exists) {
-			$insert_query = "INSERT INTO User (user_name, password, email_address) 
-			VALUES ($user_name, $password, $email_address)";
+			$insert_query = "INSERT INTO User (user_name, password, email_address,
+registration_id) VALUES ($user_name, $password, $email_address, $registration_id)";
 			$insert_id = "'$connection->insert_id'";
-			
 			$result = mysqli_query ( $connection, $insert_query );
 		}
 	} else {
@@ -64,10 +65,11 @@ if ($login_type == "Facebook") {
 			$lookup_result = mysqli_fetch_assoc ( $lookup_result );
 			$password_correct = ("'" . $lookup_result ['password'] . "'") == $password;
 			if ($password_correct) {
-				$insert_query = "INSERT INTO User (password, email_address)
-				 VALUES ($password, $email_address) 
+				$insert_query = "INSERT INTO User (password, email_address, registration_id)
+				 VALUES ($password, $email_address, $registration_id) 
 				 ON DUPLICATE KEY UPDATE user_id = LAST_INSERT_ID(user_id),
-				 password = $password, email_address = $email_address";
+				 password = $password, email_address = $email_address, 
+				registration_id = $registration_id";
 				$insert_id = "'$connection->insert_id'";
 				$result = mysqli_query ( $connection, $insert_query );
 			}
