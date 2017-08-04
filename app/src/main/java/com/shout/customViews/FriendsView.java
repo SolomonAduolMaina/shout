@@ -1,11 +1,11 @@
 package com.shout.customViews;
 
 import android.content.Context;
+import android.support.v7.widget.AppCompatMultiAutoCompleteTextView;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.MultiAutoCompleteTextView;
 import android.widget.TextView;
 
 import com.shout.R;
@@ -15,10 +15,10 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 
-public class FriendsView extends MultiAutoCompleteTextView {
+public class FriendsView extends AppCompatMultiAutoCompleteTextView {
+    public ArrayList<String> invitees = new ArrayList<>();
     private Context context;
     private ViewGroup root;
-    public ArrayList<String> invitees = new ArrayList<>();
 
     public FriendsView(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -32,7 +32,7 @@ public class FriendsView extends MultiAutoCompleteTextView {
 
     @Override
     public void replaceText(CharSequence text) {
-        View view = LayoutInflater.from(context).inflate(R.layout.canoncial_text_view, root, false);
+        View view = LayoutInflater.from(context).inflate(R.layout.canonical_text_view, root, false);
         try {
             JSONObject data = new JSONObject(text.toString());
             ((TextView) view.findViewById(R.id.content_textView)).setText(data.optString("name"));

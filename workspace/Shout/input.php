@@ -1,48 +1,35 @@
 <?php
 // API Url
-$url = 'http://shouttestserver.ueuo.com/create_event.php';
+$url = 'localhost/create_event.php';
 
 // Initiate cURL.
 $ch = curl_init ( $url );
-
-// The JSON data.
 $jsonData = array (
-		'title' => "Wimbledon Final",
-		'new_event' => "No",
-		'end_datetime' => "2016:07:13:8:30",
-		'location' => "SW19",
-		'description' => "should be cracking",
-		'tag' => "Tennis",
-		'event_id' => "1",
+		'creator_id' => "21",
 		'shout' => "true",
-		'invitees' => array(),
-		'creator_id' => "5",
-		'start_datetime' => "2016:07:13:8:0",
+		'description' => "Just Noshing",
+		'title' => "Late Afternoon Nosh",
+		'tag' => "Nosh",
+		'location' => "My Back Garden",
+		'start_datetime' => "2017:7:1:16:0",
+		'end_datetime' => "2017:7:1:16:30",
+		'new_event' => "Yes",
+		'event_id' => null,
+		'invitees' => array ("22", "26") 
 );
 
-// Encode the array into JSON.
 $jsonDataEncoded = json_encode ( $jsonData );
 
-// Tell cURL that we want to send a POST request.
 curl_setopt ( $ch, CURLOPT_POST, 1 );
-
-// Attach our encoded JSON string to the POST fields.
 curl_setopt ( $ch, CURLOPT_POSTFIELDS, $jsonDataEncoded );
-
-// Set the content type to application/json
 curl_setopt ( $ch, CURLOPT_HTTPHEADER, array (
 		'Content-Type: application/json' 
 ) );
-
-// Receive data back
 curl_setopt ( $ch, CURLOPT_RETURNTRANSFER, true );
 
-// Execute the request
 $result = curl_exec ( $ch );
+curl_close ( $ch );
 
 echo $result;
-
-// Close the channel
-curl_close ( $ch );
 
 ?>

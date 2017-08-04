@@ -5,9 +5,9 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.shout.applications.ShoutApplication;
-import com.shout.notificationsProvider.ShoutDatabaseDescription.Invite;
-import com.shout.notificationsProvider.ShoutDatabaseDescription.Event;
+import com.shout.database.ShoutDatabaseDescription.Event;
+import com.shout.database.ShoutDatabaseDescription.Invite;
+import com.shout.utilities.Util;
 
 import org.json.JSONException;
 
@@ -16,30 +16,36 @@ public class ViewEventFragment extends SingleEventFragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle
             savedInstanceState) {
-        eventInvite = ShoutApplication.BundleToHashMap(getArguments());
+        eventInvite = Util.BundleToHashMap(getArguments());
         View rootView = super.onCreateView(inflater, container, savedInstanceState);
         eventTitle_editText.setText(eventInvite.get(Event.COLUMN_TITLE));
-        eventLocation_editText.setText(eventInvite.get(Event.COLUMN_LOCATION));
+        location_autoComplete.setText(eventInvite.get(Event.COLUMN_LOCATION));
         eventDescription_editText.setText(eventInvite.get(Event.COLUMN_DESCRIPTION));
 
-        String startDateTime = eventInvite.get(Event.COLUMN_START_DATETIME).replace("-", ":");
-        int space = startDateTime.indexOf(" ");
-        chooseStartDate.setText(startDateTime.substring(0, space));
-        chooseStartTime.setText(startDateTime.substring(space + 1 , startDateTime.length()));
+        String startDateTime = eventInvite.get(Event.COLUMN_START_DATETIME);
+        int firstColon = startDateTime.indexOf(":");
+        String afterFirstColon = startDateTime.substring(firstColon + 1, startDateTime.length());
+        int secondColon = afterFirstColon.indexOf(":");
+        int desiredColon = firstColon + secondColon + 1;
+        chooseStartDate.setText(startDateTime.substring(0, desiredColon));
+        chooseStartTime.setText(startDateTime.substring(desiredColon + 1, startDateTime.length() - 1));
 
-        String endDateTime = eventInvite.get(Event.COLUMN_END_DATETIME).replace("-", ":");
-        space = endDateTime.indexOf(" ");
-        chooseEndDate.setText(endDateTime.substring(0, space));
-        chooseEndTime.setText(endDateTime.substring(space + 1 , endDateTime.length()));
+        String endDateTime = eventInvite.get(Event.COLUMN_END_DATETIME);
+        firstColon = endDateTime.indexOf(":");
+        afterFirstColon = endDateTime.substring(firstColon + 1, endDateTime.length());
+        secondColon = afterFirstColon.indexOf(":");
+        desiredColon = firstColon + secondColon + 1;
+        chooseEndDate.setText(endDateTime.substring(0, desiredColon));
+        chooseEndTime.setText(endDateTime.substring(desiredColon + 1, endDateTime.length() - 1));
 
         eventTag_editText.setText(eventInvite.get(Event.COLUMN_TAG));
-        shoutEvent_checkBox.setChecked(Boolean.getBoolean(eventInvite.get(Event.COLUMN_SHOUT)));
+        shoutEvent_checkBox.setChecked(eventInvite.get(Event.COLUMN_SHOUT).equals("true"));
         return rootView;
     }
 
     @Override
     public void configureButton() throws JSONException {
-        final String userId = getActivity().getIntent().getStringExtra("userId");
+        final String userId = getActivity().getIntent().getStringExtra("user_id");
         if (eventInvite.get(Event.COLUMN_CREATOR_ID).equals(userId)) {
             createEvent_Button.setText("Confirm Changes");
         } else if (eventInvite.get(Invite.COLUMN_INVITEE_ID) != null) {

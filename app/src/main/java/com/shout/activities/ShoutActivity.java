@@ -1,13 +1,12 @@
 package com.shout.activities;
 
+import android.app.Fragment;
+import android.app.FragmentTransaction;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-
 import android.os.Bundle;
-
 import android.support.design.widget.FloatingActionButton;
-import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
@@ -20,20 +19,21 @@ import com.facebook.AccessTokenTracker;
 import com.shout.R;
 import com.shout.fragments.CreateEventFragment;
 import com.shout.fragments.MyEventsFragment;
+import com.shout.fragments.MyMapsFragment;
 import com.shout.fragments.SearchFragment;
 
 public class ShoutActivity extends AppCompatActivity implements SearchView.OnQueryTextListener {
     public final static String ACTION_FINISHED_SYNC = "com.shout.ACTION_FINISHED_SYNC";
     public final static IntentFilter syncIntentFilter = new IntentFilter(ACTION_FINISHED_SYNC);
-    private AccessTokenTracker tokenTracker;
     private final AppCompatActivity THIS_INSTANCE = this;
+    Fragment mainFragment;
     private SearchView searchView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        tokenTracker = new AccessTokenTracker() {
+        AccessTokenTracker tokenTracker = new AccessTokenTracker() {
             @Override
             protected void onCurrentAccessTokenChanged(AccessToken old, AccessToken current) {
                 startActivity(new Intent(THIS_INSTANCE, LoginActivity.class));
@@ -41,26 +41,43 @@ public class ShoutActivity extends AppCompatActivity implements SearchView.OnQue
             }
         };
 
+        tokenTracker.startTracking();
         setContentView(R.layout.shout_activity);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.create_event);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 CreateEventFragment createEventFragment = new CreateEventFragment();
-                FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
+                FragmentTransaction transaction = getFragmentManager().beginTransaction();
                 transaction.replace(R.id.fragment, createEventFragment);
                 transaction.addToBackStack(null);
                 transaction.commit();
-                /*Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();*/
+
             }
         });
 
+        FloatingActionButton maps = (FloatingActionButton) findViewById(R.id.events_map);
+        maps.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                MyMapsFragment mapFragment = new MyMapsFragment();
+                mapFragment.getMapAsync(mapFragment);
+                FragmentTransaction transaction = getFragmentManager().beginTransaction();
+                transaction.add(R.id.map_view, mapFragment);
+                transaction.hide(mainFragment);
+                transaction.addToBackStack(null);
+                transaction.commit();
+
+            }
+        });
+
+
         MyEventsFragment eventsFragment = new MyEventsFragment();
-        getSupportFragmentManager().beginTransaction().add(R.id.fragment, eventsFragment).commit();
+        mainFragment = eventsFragment;
+        getFragmentManager().beginTransaction().add(R.id.fragment, eventsFragment).commit();
     }
 
     @Override
@@ -80,7 +97,7 @@ public class ShoutActivity extends AppCompatActivity implements SearchView.OnQue
         InputMethodManager inputMethodManager = (InputMethodManager) getSystemService
                 (Context.INPUT_METHOD_SERVICE);
         inputMethodManager.hideSoftInputFromWindow(searchView.getWindowToken(), 0);
-        FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
+        FragmentTransaction transaction = getFragmentManager().beginTransaction();
         transaction.replace(R.id.fragment, searchFragment);
         transaction.addToBackStack(null);
         transaction.commit();

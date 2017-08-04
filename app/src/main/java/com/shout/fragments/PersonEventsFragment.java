@@ -1,36 +1,33 @@
 package com.shout.fragments;
 
 import android.os.Bundle;
-import android.util.Pair;
 import android.view.View;
 import android.widget.Button;
 
-import com.shout.applications.ShoutApplication;
+import com.shout.database.ShoutDatabaseDescription.Invite;
+import com.shout.networkmessaging.SendMessages;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import com.shout.notificationsProvider.ShoutDatabaseDescription.Invite;
-
 import java.util.HashMap;
 
 public class PersonEventsFragment extends EventsListFragment {
-    private final String PERSON_SEARCH_PHP_PATH = "http://shouttestserver.ueuo.com/person_events" +
-            ".php";
+    private final String PERSON_SEARCH_PHP_PATH = "http://10.0.2.2/person_events.php";
+
+    private final PersonEventsFragment instance = this;
 
     private View.OnClickListener setAddInviteListener(final EventsListFragment.EventsAdapter
             .ViewHolder holder, final String toSet) {
         return new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                    holder.eventInvite.put(Invite.COLUMN_INVITEE_ID, userId);
-                    holder.eventInvite.put(Invite.COLUMN_TYPE, "Joined");
-                    holder.eventInvite.put(Invite.COLUMN_GOING, toSet);
-                    holder.eventInvite.put(Invite.COLUMN_SENT, "Yes");
-                    JSONObject jsonObject = new JSONObject(holder.eventInvite);
-                    new UpdateEventsView().execute(new Pair<>(UPDATE_GOING_PHP_PATH, new Pair<>
-                            (holder, jsonObject)));
+                holder.eventInvite.put(Invite.COLUMN_INVITEE_ID, userId);
+                holder.eventInvite.put(Invite.COLUMN_TYPE, "Joined");
+                holder.eventInvite.put(Invite.COLUMN_GOING, toSet);
+                holder.eventInvite.put(Invite.COLUMN_SENT, "Yes");
+                instance.personSearchTask(new JSONObject(holder.eventInvite));
             }
         };
     }
@@ -63,24 +60,26 @@ public class PersonEventsFragment extends EventsListFragment {
             jsonObject.put("user_id", userId);
             jsonObject.put("person_id", getArguments().getString("personId"));
             jsonObject.put("offset", "0");
-            new PersonSearchTask().execute(new Pair<>(PERSON_SEARCH_PHP_PATH, new Pair<>((Void)
-                    null, jsonObject)));
+            personSearchTask(jsonObject);
         } catch (JSONException e) {
             e.printStackTrace();
         }
     }
 
-    private class PersonSearchTask extends ShoutApplication.SendAndReceiveJSON<Void> {
-        @Override
-        protected void onPostExecute(Pair<Void, JSONObject> pair) {
-            try {
-                if (pair.second.get("search_results").equals("Success!")) {
-                    JSONArray events = pair.second.getJSONArray("events");
-                    ((EventsAdapter) eventsRecyclerView.getAdapter()).setData(events);
+    public void personSearchTask(final JSONObject jsonObject) {
+        SendMessages.ProcessResponse lambda = new SendMessages.ProcessResponse() {
+            @Override
+            public void process(JSONObject response) {
+                try {
+                    if (response.get("search_results").equals("Success!")) {
+                        JSONArray events = response.getJSONArray("events");
+                        ((EventsAdapter) eventsRecyclerView.getAdapter()).setData(events);
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
                 }
-            } catch (JSONException e) {
-                e.printStackTrace();
             }
-        }
+        };
+        SendMessages.doOnResponse(lambda, getActivity(), jsonObject, PERSON_SEARCH_PHP_PATH);
     }
 }

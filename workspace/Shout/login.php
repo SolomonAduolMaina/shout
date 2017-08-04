@@ -2,9 +2,10 @@
 error_reporting ( E_ALL );
 ini_set ( 'display_errors', 1 );
 
-$host_name = 'localhost';
-$db_name = '987829';
+$db_host = 'localhost';
+$db_username = 'solomon';
 $db_password = 'Auremest7';
+$db_name = 'shout';
 
 $data = file_get_contents ( 'php://input' );
 $json = json_decode ( $data, true );
@@ -17,7 +18,7 @@ $new_user = $json ['new_user'];
 $login_type = $json ['login_type'];
 $facebook_friends = $json ['facebook_friends'];
 
-$connection = mysqli_connect ( $host_name, $db_name, $db_password, $db_name );
+$connection = mysqli_connect ( $db_host, $db_username, $db_password, $db_name );
 $result = $user_exists = $insert_id = FALSE;
 if ($login_type == "Facebook") {
 	$lookup_query = "SELECT DISTINCT * from User WHERE facebook_id = $facebook_id";
@@ -57,8 +58,8 @@ if ($login_type == "Facebook") {
 		if (! $user_exists) {
 			$insert_query = "INSERT INTO User (user_name, password, email_address,
 registration_id) VALUES ($user_name, $password, $email_address, $registration_id)";
-			$insert_id = "'$connection->insert_id'";
 			$result = mysqli_query ( $connection, $insert_query );
+			$insert_id = "'$connection->insert_id'";
 		}
 	} else {
 		if ($user_exists) {
@@ -70,8 +71,8 @@ registration_id) VALUES ($user_name, $password, $email_address, $registration_id
 				 ON DUPLICATE KEY UPDATE user_id = LAST_INSERT_ID(user_id),
 				 password = $password, email_address = $email_address, 
 				registration_id = $registration_id";
-				$insert_id = "'$connection->insert_id'";
 				$result = mysqli_query ( $connection, $insert_query );
+				$insert_id = "'$connection->insert_id'";
 			}
 		}
 	}

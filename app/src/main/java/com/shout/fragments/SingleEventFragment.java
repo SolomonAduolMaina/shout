@@ -2,17 +2,16 @@ package com.shout.fragments;
 
 import android.app.DatePickerDialog;
 import android.app.DatePickerDialog.OnDateSetListener;
-import android.app.TimePickerDialog.OnTimeSetListener;
+import android.app.Fragment;
 import android.app.TimePickerDialog;
+import android.app.TimePickerDialog.OnTimeSetListener;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
 import android.util.Pair;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-
 import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
@@ -20,16 +19,22 @@ import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.Filter;
 import android.widget.Filterable;
+import android.widget.MultiAutoCompleteTextView;
 import android.widget.TextView;
 import android.widget.TimePicker;
-import android.widget.MultiAutoCompleteTextView;
 import android.widget.Toast;
 
 import com.google.android.flexbox.FlexboxLayout;
+import com.google.android.gms.common.api.Status;
+import com.google.android.gms.location.places.Place;
+import com.google.android.gms.location.places.ui.PlaceAutocompleteFragment;
+import com.google.android.gms.location.places.ui.PlaceSelectionListener;
 import com.shout.R;
-import com.shout.applications.ShoutApplication;
 import com.shout.customViews.FriendsView;
-import com.shout.notificationsProvider.ShoutDatabaseDescription.Event;
+import com.shout.database.DatabaseUtilities;
+import com.shout.database.ShoutDatabaseDescription.Event;
+import com.shout.networkmessaging.SendMessages;
+import com.shout.utilities.Util;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -41,8 +46,9 @@ import java.util.HashMap;
 import java.util.Locale;
 
 public abstract class SingleEventFragment extends Fragment {
-    public final String CREATE_EVENT_PHP_PATH = "http://shouttestserver.ueuo.com/create_event.php";
-    EditText eventTitle_editText, eventLocation_editText, eventDescription_editText,
+    PlaceAutocompleteFragment location_autoComplete;
+    String location;
+    EditText eventTitle_editText, eventDescription_editText,
             eventTag_editText;
     TextView chooseStartDate, chooseStartTime, chooseEndDate, chooseEndTime;
     FriendsView eventInvitees_editText;
@@ -58,7 +64,8 @@ public abstract class SingleEventFragment extends Fragment {
             savedInstanceState) {
         View rootView = inflater.inflate(R.layout.create_event_fragment, container, false);
         eventTitle_editText = (EditText) rootView.findViewById(R.id.eventTitle_editText);
-        eventLocation_editText = (EditText) rootView.findViewById(R.id.eventLocation_editText);
+        location_autoComplete = (PlaceAutocompleteFragment)
+                getChildFragmentManager().findFragmentById(R.id.location_autoComplete);
         eventDescription_editText = (EditText) rootView.findViewById(R.id
                 .eventDescription_editText);
         chooseStartDate = (TextView) rootView.findViewById(R.id.chooseStartDate_textView);
@@ -71,10 +78,22 @@ public abstract class SingleEventFragment extends Fragment {
         eventInvitees_editText.setRoot((ViewGroup) eventInvitees_editText.getParent());
         shoutEvent_checkBox = (CheckBox) rootView.findViewById(R.id.shoutEvent_checkBox);
         createEvent_Button = (Button) rootView.findViewById(R.id.createEvent_button);
+
+        location_autoComplete.setOnPlaceSelectedListener(new PlaceSelectionListener() {
+            @Override
+            public void onPlaceSelected(Place place) {
+                location = place.getName().toString();
+            }
+
+            @Override
+            public void onError(Status status) {
+
+            }
+        });
         try {
             Intent intent = getActivity().getIntent();
-            ArrayList<String> friendIds = intent.getStringArrayListExtra("friendIds");
-            ArrayList<String> friendNames = intent.getStringArrayListExtra("friendNames");
+            ArrayList<String> friendIds = intent.getStringArrayListExtra("friend_ids");
+            ArrayList<String> friendNames = intent.getStringArrayListExtra("friend_names");
             ArrayList<JSONObject> pairs = new ArrayList<>();
             for (int i = 0; i < friendIds.size(); i++) {
                 JSONObject jsonObject = new JSONObject();
@@ -82,7 +101,7 @@ public abstract class SingleEventFragment extends Fragment {
                 jsonObject.put("name", friendNames.get(i));
                 pairs.add(jsonObject);
             }
-            eventInvitees_editText.setAdapter(new FriendsAdapter(getContext(), pairs));
+            eventInvitees_editText.setAdapter(new FriendsAdapter(this.getActivity(), pairs));
             eventInvitees_editText.setTokenizer(new MultiAutoCompleteTextView.CommaTokenizer());
 
             Calendar calendar = Calendar.getInstance();
@@ -109,7 +128,7 @@ public abstract class SingleEventFragment extends Fragment {
                                     "%1$d:%2$d:%3$d", y, m, d));
                         }
                     };
-                    DatePickerDialog dialog = new DatePickerDialog(getContext(), listener, year,
+                    DatePickerDialog dialog = new DatePickerDialog(getActivity(), listener, year,
                             month, day);
                     dialog.setTitle("Set the Start Date of your Event");
                     dialog.show();
@@ -126,7 +145,7 @@ public abstract class SingleEventFragment extends Fragment {
                                     h, m));
                         }
                     };
-                    TimePickerDialog dialog = new TimePickerDialog(getContext(), listener, hour,
+                    TimePickerDialog dialog = new TimePickerDialog(getActivity(), listener, hour,
                             minute, true);
                     dialog.setTitle("Set the Start Time of your Event");
                     dialog.show();
@@ -146,7 +165,7 @@ public abstract class SingleEventFragment extends Fragment {
 
     public void captureUserData() {
         eventInvite.put(Event.COLUMN_TITLE, eventTitle_editText.getText().toString());
-        eventInvite.put(Event.COLUMN_LOCATION, eventLocation_editText.getText().toString());
+        eventInvite.put(Event.COLUMN_LOCATION, location);
         eventInvite.put(Event.COLUMN_DESCRIPTION, (eventDescription_editText.getText().toString()));
         eventInvite.put(Event.COLUMN_START_DATETIME, chooseStartDate.getText().toString() + ":"
                 + chooseStartTime.getText().toString());
@@ -161,6 +180,7 @@ public abstract class SingleEventFragment extends Fragment {
             captureUserData();
             JSONObject jsonObject = new JSONObject(eventInvite);
             JSONArray jsonArray = new JSONArray();
+            jsonObject.put("creator_id", getActivity().getIntent().getStringExtra("user_id"));
             for (String invitee : eventInvitees_editText.invitees) {
                 jsonArray = jsonArray.put(invitee);
             }
@@ -171,38 +191,41 @@ public abstract class SingleEventFragment extends Fragment {
             } else {
                 jsonObject.put("new_event", "No");
             }
-            String path = updateInvite ? EventsListFragment.UPDATE_GOING_PHP_PATH :
-                    CREATE_EVENT_PHP_PATH;
-            new UpdateEventTask().execute(new Pair<>(path, new Pair<>(updateInvite, jsonObject)));
+            updateEventTask(new Pair<>(updateInvite, jsonObject));
         } catch (JSONException e) {
             e.printStackTrace();
         }
     }
 
-    public class UpdateEventTask extends ShoutApplication.SendAndReceiveJSON<Boolean> {
-        @Override
-        public void onPostExecute(Pair<Boolean, JSONObject> pair) {
-            try {
-                if (pair.second.get("insert").equals("Success!")) {
-                    HashMap<String, String> eventInvite = ShoutApplication.JSONObjectToHashMap(pair
-                            .second.getJSONObject("event_invite"));
-                    Pair<Integer, Integer> result = ShoutApplication.updateEventInvite(eventInvite,
-                            getContext(), pair.first);
-                    if (result.first.equals(1) && (!pair.first || result.second.equals(1))) {
-                        getFragmentManager().popBackStack();
-                        Toast.makeText(getContext(), "Success!", Toast.LENGTH_LONG).show();
+    public void updateEventTask(final Pair<Boolean, JSONObject> pair) {
+        SendMessages.ProcessResponse lambda = new SendMessages.ProcessResponse() {
+            @Override
+            public void process(JSONObject response) {
+                try {
+                    if (response.get("insert").equals("Success!")) {
+                        HashMap<String, String> eventInvite = Util.JSONObjectToHashMap(response
+                                .getJSONObject("event_invite"));
+                        Pair<Integer, Integer> result = DatabaseUtilities.updateEventInvite(eventInvite,
+                                getActivity(), pair.first);
+                        if (result.first.equals(1) && (!pair.first || result.second.equals(1))) {
+                            getFragmentManager().popBackStack();
+                            Toast.makeText(getActivity(), "Success!", Toast.LENGTH_LONG).show();
+                        } else {
+                            String localError = "Error updating local database";
+                            Toast.makeText(getActivity(), localError, Toast.LENGTH_LONG).show();
+                        }
                     } else {
-                        String localError = "Error updating local database";
-                        Toast.makeText(getContext(), localError, Toast.LENGTH_LONG).show();
+                        String remoteError = pair.second.getString("error_message");
+                        Toast.makeText(getActivity(), remoteError, Toast.LENGTH_LONG).show();
                     }
-                } else {
-                    String remoteError = pair.second.getString("error_message");
-                    Toast.makeText(getContext(), remoteError, Toast.LENGTH_LONG).show();
+                } catch (JSONException e) {
+                    e.printStackTrace();
                 }
-            } catch (JSONException e) {
-                e.printStackTrace();
             }
-        }
+        };
+        String path = pair.first ? getString(R.string.update_going_php_path) :
+                getString(R.string.create_event_php_path);
+        SendMessages.doOnResponse(lambda, getActivity(), pair.second, path);
     }
 
     private class FriendsAdapter extends BaseAdapter implements Filterable {
@@ -211,7 +234,7 @@ public abstract class SingleEventFragment extends Fragment {
         private ArrayList<JSONObject> filteredData;
         private FriendsFilter friendsFilter;
 
-        public FriendsAdapter(Context context, ArrayList<JSONObject> originalData) {
+        FriendsAdapter(Context context, ArrayList<JSONObject> originalData) {
             this.context = context;
             this.originalData = originalData;
             this.friendsFilter = new FriendsFilter();
@@ -236,7 +259,7 @@ public abstract class SingleEventFragment extends Fragment {
         public View getView(int position, View convertView, ViewGroup parent) {
             ViewHolder holder;
             if (convertView == null) {
-                convertView = LayoutInflater.from(context).inflate(R.layout.canoncial_text_view,
+                convertView = LayoutInflater.from(context).inflate(R.layout.canonical_text_view,
                         parent, false);
                 holder = new ViewHolder();
                 holder.view = convertView.findViewById(R.id.content_textView);

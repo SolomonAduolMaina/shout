@@ -1,26 +1,24 @@
 package com.shout.fragments;
 
+import android.app.Fragment;
 import android.os.Bundle;
 import android.support.design.widget.TabLayout;
-import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Pair;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.shout.applications.ShoutApplication;
-import com.shout.applications.ShoutApplication.SearchClasses;
 import com.shout.R;
+import com.shout.database.DatabaseUtilities.SearchClasses;
+import com.shout.networkmessaging.SendMessages;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
 public class SearchFragment extends Fragment {
-    private final String SEARCH_PHP_PATH = "http://shouttestserver.ueuo.com/search.php";
     private final int PERSONS = 0;
     private final int EVENTS = 1;
     private final int GROUPS = 2;
@@ -31,14 +29,13 @@ public class SearchFragment extends Fragment {
             savedInstanceState) {
         View view = inflater.inflate(R.layout.search_fragment, container, false);
         JSONObject jsonObject = new JSONObject();
-        String query = getActivity().getIntent().getStringExtra("userId");
+        String query = getActivity().getIntent().getStringExtra("user_id");
         try {
             jsonObject.put("user_id", query);
             jsonObject.put("search_query", getArguments().getString("query"));
             jsonObject.put("offset", "0");
             jsonObject.put("query_type", "All");
-            Pair<Void, JSONObject> pair = new Pair<>(null, jsonObject);
-            new SearchTask().execute(new Pair<>(SEARCH_PHP_PATH, pair));
+            searchTask(jsonObject);
         } catch (JSONException e) {
             e.printStackTrace();
         }
@@ -46,7 +43,7 @@ public class SearchFragment extends Fragment {
         ((TextView) view.findViewById(R.id.query_textView)).setText("Search results for " + query);
         resultsView = (RecyclerView) view.findViewById(R.id.results_recyclerView);
         TabLayout resultsTabs = (TabLayout) view.findViewById(R.id.results_tabLayout);
-        resultsView.setLayoutManager(new LinearLayoutManager(getContext()));
+        resultsView.setLayoutManager(new LinearLayoutManager(getActivity()));
         resultsView.setAdapter(new SearchResultsAdapter());
 
         resultsTabs.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
@@ -66,35 +63,30 @@ public class SearchFragment extends Fragment {
         return view;
     }
 
-    private class SearchTask extends ShoutApplication.SendAndReceiveJSON<Void> {
-        @Override
-        protected void onPostExecute(Pair<Void, JSONObject> pair) {
-            try {
-                if (pair.second.getString("insert").equals("Success!")) {
-                    ((SearchResultsAdapter) resultsView.getAdapter()).setData(pair.second);
-                } else {
-                    String remoteError = pair.second.getString("error_message");
-                    Toast.makeText(getContext(), remoteError, Toast.LENGTH_LONG).show();
+    public void searchTask(final JSONObject jsonObject) {
+        SendMessages.ProcessResponse lambda = new SendMessages.ProcessResponse() {
+            @Override
+            public void process(JSONObject response) {
+                try {
+                    if (response.getString("insert").equals("Success!")) {
+                        ((SearchResultsAdapter) resultsView.getAdapter()).setData(response);
+                    } else {
+                        String remoteError = response.getString("error_message");
+                        Toast.makeText(getActivity(), remoteError, Toast.LENGTH_LONG).show();
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
                 }
-            } catch (JSONException e) {
-                e.printStackTrace();
             }
-        }
+        };
+        SendMessages.doOnResponse(lambda, getActivity(), jsonObject, getString(R.string.search_php_path));
     }
+
 
     private class SearchResultsAdapter extends RecyclerView.Adapter<SearchResultsAdapter
             .ViewHolder> {
-        private int tab = 0;
         public SearchClasses searchClasses;
-
-        public class ViewHolder extends RecyclerView.ViewHolder {
-            public View view;
-
-            public ViewHolder(View view) {
-                super(view);
-                this.view = view;
-            }
-        }
+        private int tab = 0;
 
         @Override
         public SearchResultsAdapter.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
@@ -161,6 +153,15 @@ public class SearchFragment extends Fragment {
         public void changeTab(int tab) {
             this.tab = tab;
             notifyDataSetChanged();
+        }
+
+        public class ViewHolder extends RecyclerView.ViewHolder {
+            public View view;
+
+            public ViewHolder(View view) {
+                super(view);
+                this.view = view;
+            }
         }
     }
 }

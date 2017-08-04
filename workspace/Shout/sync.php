@@ -2,14 +2,15 @@
 error_reporting ( E_ALL );
 ini_set ( 'display_errors', 1 );
 
-$host_name = 'localhost';
-$user_name = '987829';
-$password = 'Auremest7';
+$db_host = 'localhost';
+$db_username = 'solomon';
+$db_password = 'Auremest7';
+$db_name = 'shout';
 
 $data = file_get_contents ( 'php://input' );
 $json = json_decode ( $data, true );
-$user_id = "'$json ['userId']'";
-$connection = mysqli_connect ( $host_name, $user_name, $password, $user_name );
+$user_id = "'" . $json ['user_id'] . "'";
+$connection = mysqli_connect ( $db_host, $db_username, $db_password, $db_name );
 
 $events_query = "SELECT DISTINCT Event.* FROM Event LEFT OUTER JOIN Invite ON 
 Event.event_id  = Invite.event_id WHERE Event.creator_id = $user_id OR 

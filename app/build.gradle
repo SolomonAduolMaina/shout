@@ -1,13 +1,13 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 24
-    buildToolsVersion "24.0.0"
+    compileSdkVersion 25
+    buildToolsVersion '25.0.0'
 
     defaultConfig {
         applicationId "com.shout"
-        minSdkVersion 15
-        targetSdkVersion 24
+        minSdkVersion 19
+        targetSdkVersion 25
         versionCode 1
         versionName "1.0"
     }
@@ -26,14 +26,16 @@ repositories {
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
     testCompile 'junit:junit:4.12'
-    compile 'com.android.support:gridlayout-v7:24.1.1'
-    compile 'com.android.support:appcompat-v7:24.1.1'
-    compile 'com.android.support:design:24.1.1'
-    compile 'com.facebook.android:facebook-android-sdk:4.13.1'
+    compile 'com.android.support:gridlayout-v7:25.3.1'
+    compile 'com.android.support:appcompat-v7:25.3.1'
+    compile 'com.android.support:design:25.3.1'
+    compile 'com.facebook.android:facebook-android-sdk:[4,5)'
     compile 'com.google.android:flexbox:0.2.2'
-    compile 'com.android.support:preference-v14:24.1.1'
-    compile 'com.android.support:support-v13:24.1.1'
-    compile 'com.google.firebase:firebase-messaging:9.2.1'
+    compile 'com.android.support:preference-v14:25.3.1'
+    compile 'com.android.support:support-v13:25.3.1'
+    compile 'com.google.firebase:firebase-messaging:11.0.4'
+    compile 'com.android.volley:volley:1.0.0'
+    compile 'com.google.android.gms:play-services-places:11.0.4'
 }
 
 apply plugin: 'com.google.gms.google-services'

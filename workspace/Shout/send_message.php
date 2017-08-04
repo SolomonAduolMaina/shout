@@ -1,15 +1,20 @@
 <?php
+include 'send_notification.php';
+
 /**
  * The following function will send a GCM notification using curl.
  *
- * @param $apiKey		[string] The Browser API key string for your GCM account
- * @param $registrationIdsArray [array]  An array of registration ids to send this notification to
- * @param $messageData		[array]	 An named array of data to send as the notification payload
+ * @param $apiKey [string]
+ *        	Browser API key string for your GCM account
+ * @param $registrationIdsArray [array]
+ *        	An array of registration ids to send this notification to
+ * @param $messageData [array]
+ *        	named array of data to send as the notification payload
  */
-function sendNotification($apiKey, $registrationIdsArray, $messageData) {
+function sendNotification($registrationIdsArray, $messageData) {
 	$headers = array (
 			"Content-Type:application/json",
-			"Authorization:key=$apiKey"
+			"Authorization:key=AIzaSyA5vV5Jq8XkUdSZeCpQAefd6VbifsI7UDI" 
 	);
 	$data = array (
 			'data' => $messageData,
@@ -19,9 +24,8 @@ function sendNotification($apiKey, $registrationIdsArray, $messageData) {
 	$ch = curl_init ();
 	
 	curl_setopt ( $ch, CURLOPT_HTTPHEADER, $headers );
+	curl_setopt ( $ch, CURLOPT_CUSTOMREQUEST, "POST" );
 	curl_setopt ( $ch, CURLOPT_URL, "https://fcm.googleapis.com/fcm/send" );
-	curl_setopt ( $ch, CURLOPT_SSL_VERIFYHOST, 0 );
-	curl_setopt ( $ch, CURLOPT_SSL_VERIFYPEER, 0 );
 	curl_setopt ( $ch, CURLOPT_RETURNTRANSFER, true );
 	curl_setopt ( $ch, CURLOPT_POSTFIELDS, json_encode ( $data ) );
 	
@@ -31,26 +35,15 @@ function sendNotification($apiKey, $registrationIdsArray, $messageData) {
 	return $response;
 }
 
-/* Message to send
-
-$message = "the test message";
-$tickerText = "ticker text message";
-$contentTitle = "content title";
-$contentText = "content body";
-
 $data = file_get_contents ( 'php://input' );
 $json = json_decode ( $data, true );
-$registrationId = $json ['registrationId'];
-$apiKey = "AIzaSyA5vV5Jq8XkUdSZeCpQAefd6VbifsI7UDI";
+$registrationId = $json ['registration_id'];
 
-$response = sendNotification ( $apiKey, array (
+$response = sendNotification ( array (
 		$registrationId 
 ), array (
-		'message' => $message,
-		'tickerText' => $tickerText,
-		'contentTitle' => $contentTitle,
-		"contentText" => $contentText 
+		'message' => "hello world" 
 ) );
 
-echo $response;*/
+echo $response;
 ?>
