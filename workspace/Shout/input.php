@@ -1,21 +1,13 @@
 <?php
 // API Url
-$url = 'localhost/create_event.php';
+$url = 'localhost/person_events.php';
 
 // Initiate cURL.
 $ch = curl_init ( $url );
 $jsonData = array (
-		'creator_id' => "21",
-		'shout' => "true",
-		'description' => "Just Noshing",
-		'title' => "Late Afternoon Nosh",
-		'tag' => "Nosh",
-		'location' => "My Back Garden",
-		'start_datetime' => "2017:7:1:16:0",
-		'end_datetime' => "2017:7:1:16:30",
-		'new_event' => "Yes",
-		'event_id' => null,
-		'invitees' => array ("22", "26") 
+		'user_id' => "21",
+		'person_id' => "23",
+		'offset' => "0"
 );
 
 $jsonDataEncoded = json_encode ( $jsonData );

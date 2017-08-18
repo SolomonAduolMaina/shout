@@ -1,85 +1,53 @@
 package com.shout.fragments;
 
 import android.os.Bundle;
+import android.util.Pair;
+import android.view.LayoutInflater;
 import android.view.View;
-import android.widget.Button;
+import android.view.ViewGroup;
 
-import com.shout.database.ShoutDatabaseDescription.Invite;
+import com.shout.R;
 import com.shout.networkmessaging.SendMessages;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.HashMap;
-
 public class PersonEventsFragment extends EventsListFragment {
-    private final String PERSON_SEARCH_PHP_PATH = "http://10.0.2.2/person_events.php";
-
-    private final PersonEventsFragment instance = this;
-
-    private View.OnClickListener setAddInviteListener(final EventsListFragment.EventsAdapter
-            .ViewHolder holder, final String toSet) {
-        return new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                holder.eventInvite.put(Invite.COLUMN_INVITEE_ID, userId);
-                holder.eventInvite.put(Invite.COLUMN_TYPE, "Joined");
-                holder.eventInvite.put(Invite.COLUMN_GOING, toSet);
-                holder.eventInvite.put(Invite.COLUMN_SENT, "Yes");
-                instance.personSearchTask(new JSONObject(holder.eventInvite));
-            }
-        };
-    }
+    public static final String PERSON_EVENTS_FRAGMENT = "PERSON_EVENTS_FRAGMENT";
+    private int OFFSET = 0;
 
     @Override
-    public void setYesOnClickListener(Button button, final EventsAdapter.ViewHolder holder) {
-        HashMap<String, String> eventInvite = holder.eventInvite;
-        if (eventInvite.get(Invite.COLUMN_INVITEE_ID) != null) {
-            button.setOnClickListener(setUpdateInviteListener(holder, "Yes"));
-        } else {
-            button.setOnClickListener(setAddInviteListener(holder, "Yes"));
-        }
-    }
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle
+            savedInstanceState) {
 
-    @Override
-    public void setNoOnClickListener(Button button, EventsAdapter.ViewHolder holder) {
-        HashMap<String, String> eventInvite = holder.eventInvite;
-        if (eventInvite.get(Invite.COLUMN_INVITEE_ID) != null) {
-            button.setOnClickListener(setUpdateInviteListener(holder, "No"));
-        } else {
-            button.setOnClickListener(setAddInviteListener(holder, "No"));
-        }
-    }
+        View rootView = super.onCreateView(inflater, container, savedInstanceState);
+        String userId = getActivity().getIntent().getStringExtra("user_id");
+        String personId = getArguments().getString("person_id");
 
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
         JSONObject jsonObject = new JSONObject();
         try {
             jsonObject.put("user_id", userId);
-            jsonObject.put("person_id", getArguments().getString("personId"));
-            jsonObject.put("offset", "0");
-            personSearchTask(jsonObject);
+            jsonObject.put("person_id", personId);
+            jsonObject.put("offset", OFFSET);
+            getPersonEventsTask(new Pair<>(personId, jsonObject));
         } catch (JSONException e) {
             e.printStackTrace();
         }
+
+        return rootView;
     }
 
-    public void personSearchTask(final JSONObject jsonObject) {
+    void getPersonEventsTask(final Pair<String, JSONObject> pair) {
         SendMessages.ProcessResponse lambda = new SendMessages.ProcessResponse() {
             @Override
-            public void process(JSONObject response) {
-                try {
-                    if (response.get("search_results").equals("Success!")) {
-                        JSONArray events = response.getJSONArray("events");
-                        ((EventsAdapter) eventsRecyclerView.getAdapter()).setData(events);
-                    }
-                } catch (JSONException e) {
-                    e.printStackTrace();
+            public void process(JSONObject response) throws JSONException {
+                if (response.get("result").equals("Success!")) {
+                    ((EventsAdapter) eventsRecyclerView.getAdapter()).
+                            setData(response.getJSONArray("events"), pair.first);
                 }
             }
         };
-        SendMessages.doOnResponse(lambda, getActivity(), jsonObject, PERSON_SEARCH_PHP_PATH);
+        SendMessages.doOnResponse(lambda, getActivity(), pair.second,
+                getString(R.string.person_events_path));
     }
 }

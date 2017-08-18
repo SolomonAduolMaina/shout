@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <integer name="create_event">0</integer>
+    <integer name="confirm_changes">1</integer>
+    <integer name="unfollow_event">2</integer>
+    <integer name="accept_invite">3</integer>
+    <integer name="join_event">4</integer>
+</resources>

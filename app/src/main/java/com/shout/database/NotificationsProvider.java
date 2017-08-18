@@ -62,7 +62,7 @@ public class NotificationsProvider extends ContentProvider {
     public Cursor query(Uri uri, String[] projection, String selection, String[] selectionArgs,
                         String sortOrder) {
         SQLiteQueryBuilder queryBuilder = new SQLiteQueryBuilder();
-        Cursor cursor;
+        Cursor cursor = null;
         String SQL;
         switch (uriMatcher.match(uri)) {
             case NOTIFICATIONS_CONSTANT:
@@ -74,36 +74,16 @@ public class NotificationsProvider extends ContentProvider {
                 cursor = queryBuilder.query(dbHelper.getReadableDatabase(), columns, selection,
                         selectionArgs, null, null, sortOrder);
                 cursor.setNotificationUri(getContext().getContentResolver(), uri);
-                return cursor;
+                break;
             case EVENT_CONSTANT:
             case ONE_EVENT_CONSTANT:
                 queryBuilder.setTables("Event");
                 cursor = queryBuilder.query(dbHelper.getReadableDatabase(),
                         projection, selection, selectionArgs, null, null, sortOrder);
                 cursor.setNotificationUri(getContext().getContentResolver(), uri);
-                return cursor;
-        }
-
-        /*switch (uriMatcher.match(uri)) {
-            case ONE_NOTIFICATION: // eventInvite with specified id will be selected
-                queryBuilder.appendWhere(ShoutDatabaseDescription.Invite._ID + "=" + uri
-                        .getLastPathSegment());
                 break;
-            case NOTIFICATIONS_CONSTANT: // all notifications will be selected
-                break;
-            default:
-                throw new UnsupportedOperationException(getContext().getString(R.string
-                        .invalid_query_uri) + uri);
         }
-
-        // execute the query to select one or all notifications
-        Cursor cursor = queryBuilder.query(dbHelper.getReadableDatabase(),
-                projection, selection, selectionArgs, null, null, sortOrder);
-
-        // configure to watch for content changes
-        cursor.setNotificationUri(getContext().getContentResolver(), uri);
-        return cursor;*/
-        return null;
+        return cursor;
     }
 
     @Nullable
@@ -148,31 +128,25 @@ public class NotificationsProvider extends ContentProvider {
 
     @Override
     public int delete(Uri uri, String selection, String[] selectionArgs) {
-
-        /*int numberOfRowsDeleted;
-
+        int numberOfRowsDeleted = 0;
         switch (uriMatcher.match(uri)) {
-            case ONE_NOTIFICATION:
-                // get from the uri the id of contact to update
-                String id = uri.getLastPathSegment();
-
-                // delete the contact
-                numberOfRowsDeleted = dbHelper.getWritableDatabase().delete(Invite.INVITE_CONSTANT,
-                        Invite._ID + "=" + id, selectionArgs);
+            case NOTIFICATIONS_CONSTANT:
+                break;
+            case EVENT_CONSTANT:
+            case ONE_EVENT_CONSTANT:
+                numberOfRowsDeleted = dbHelper.getWritableDatabase().delete("Event", selection,
+                        selectionArgs);
                 break;
             default:
                 throw new UnsupportedOperationException(
                         getContext().getString(R.string.invalid_delete_uri) + uri);
         }
-
-        // notify observers that the database changed
         if (numberOfRowsDeleted != 0) {
             getContext().getContentResolver().notifyChange(uri, null);
         }
-
-        return numberOfRowsDeleted;*/
-        return 0;
+        return numberOfRowsDeleted;
     }
+
 
     @Override
     public int update(Uri uri, ContentValues contentValues, String selection, String[]

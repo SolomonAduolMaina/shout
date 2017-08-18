@@ -2,13 +2,17 @@ package com.shout.fragments;
 
 import android.view.View;
 
+import com.shout.R;
+
 public class CreateEventFragment extends SingleEventFragment {
     @Override
-    public void configureButton() {
+    public void setState() {
+        STATE = getResources().getInteger(R.integer.create_event);
+        createEvent_Button.setText(R.string.create_event);
         createEvent_Button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                updateEvent(true, false);
+                updateEvent(false);
             }
         });
     }

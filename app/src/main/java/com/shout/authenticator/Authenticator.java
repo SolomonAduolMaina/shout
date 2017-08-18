@@ -29,10 +29,10 @@ public class Authenticator extends AbstractAccountAuthenticator {
     public static final String AUTHTOKEN_TYPE_FULL_ACCESS = "Full access";
     public static final String AUTHTOKEN_TYPE_FULL_ACCESS_LABEL = "Full access to a Shout Account";
 */
-    public final static String ARG_ACCOUNT_TYPE = "ACCOUNT_TYPE";
-    public final static String ARG_AUTH_TYPE = "AUTH_TYPE";
-    public final static String ARG_ACCOUNT_NAME = "ACCOUNT_NAME";
-    public final static String ARG_IS_ADDING_NEW_ACCOUNT = "IS_ADDING_ACCOUNT";
+    private final static String ARG_ACCOUNT_TYPE = "ACCOUNT_TYPE";
+    private final static String ARG_AUTH_TYPE = "AUTH_TYPE";
+    private final static String ARG_ACCOUNT_NAME = "ACCOUNT_NAME";
+    private final static String ARG_IS_ADDING_NEW_ACCOUNT = "IS_ADDING_ACCOUNT";
 
     
     private final Context context;

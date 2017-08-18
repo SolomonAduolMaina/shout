@@ -79,10 +79,13 @@ public class LoginActivity extends AccountAuthenticatorActivity {
 
             @Override
             public void onCancel() {
+                // TODO Handle Faceboook cances
             }
+
 
             @Override
             public void onError(FacebookException exception) {
+                // TODO Handle Facebook error
             }
         };
 
@@ -138,53 +141,55 @@ public class LoginActivity extends AccountAuthenticatorActivity {
     private void loginTask(final JSONObject jsonObject) {
         ProcessResponse lambda = new ProcessResponse() {
             @Override
-            public void process(JSONObject response) {
-                try {
-                    if (response.getString("insert").equals("Success!")) {
-                        JSONObject token = response.getJSONObject("token");
-                        String userName = token.getString("user_name");
-                        String password = token.getString("password");
-                        Account account = new Account(userName, getString(R.string.account_type));
-                        accountManager.addAccountExplicitly(account, password, null);
-                        accountManager.setAuthToken(account, "insert_row", token.toString());
-                        accountManager.setPassword(account, password);
+            public void process(JSONObject response) throws JSONException {
+                if (response.getString("result").equals("Success!")) {
+                    JSONObject token = response.getJSONObject("token");
+                    String user_id = token.getString("user_id");
+                    String userName = token.getString("user_name");
+                    String password = token.getString("password");
+                    Account account = new Account(userName, getString(R.string.account_type));
+                    accountManager.addAccountExplicitly(account, password, null);
+                    accountManager.setAuthToken(account, "insert_row", token.toString());
+                    accountManager.setPassword(account, password);
 
-                        Bundle bundle = new Bundle();
-                        bundle.putBoolean(ContentResolver.SYNC_EXTRAS_MANUAL, true);
-                        bundle.putBoolean(ContentResolver.SYNC_EXTRAS_EXPEDITED, true);
-                        bundle.putString("user_id", token.getString("user_id"));
-                        ContentResolver.requestSync(account, NotificationsProvider.AUTHORITY, bundle);
+                    Bundle bundle = new Bundle();
+                    bundle.putBoolean(ContentResolver.SYNC_EXTRAS_MANUAL, true);
+                    bundle.putBoolean(ContentResolver.SYNC_EXTRAS_EXPEDITED, true);
+                    bundle.putString("user_id", user_id);
+                    bundle.putString("notification", "No");
+                    bundle.putString("event_id", "None");
+                    bundle.putString("type", "None");
+                    getContentResolver().delete(NotificationsProvider.EVENT_URI, "", new String[]{});
+                    ContentResolver.requestSync(account, NotificationsProvider.AUTHORITY, bundle);
 
-                        Intent result = new Intent();
-                        result.putExtra(AccountManager.KEY_ACCOUNT_NAME, userName);
-                        result.putExtra(AccountManager.KEY_ACCOUNT_TYPE, getString(R.string.account_type));
-                        result.putExtra(AccountManager.KEY_AUTHTOKEN, token.toString());
-                        setAccountAuthenticatorResult(result.getExtras());
-                        setResult(RESULT_OK, result);
+                    Intent result = new Intent();
+                    result.putExtra(AccountManager.KEY_ACCOUNT_NAME, userName);
+                    result.putExtra(AccountManager.KEY_ACCOUNT_TYPE, getString(R.string.account_type));
+                    result.putExtra(AccountManager.KEY_AUTHTOKEN, token.toString());
+                    setAccountAuthenticatorResult(result.getExtras());
+                    setResult(RESULT_OK, result);
 
-                        JSONArray jsonArray = response.getJSONArray("friends");
-                        ArrayList<String> friendIds = new ArrayList<>();
-                        ArrayList<String> friendNames = new ArrayList<>();
-                        for (int i = 0; i < jsonArray.length(); i++) {
-                            JSONObject friend = jsonArray.getJSONObject(i);
-                            friendIds.add(friend.getString("friend_id"));
-                            friendNames.add(friend.getString("user_name"));
-                        }
-
-                        Intent intent = new Intent(THIS_INSTANCE, ShoutActivity.class);
-                        intent.putExtra("user_id", token.getString("user_id"));
-                        intent.putStringArrayListExtra("friend_ids", friendIds);
-                        intent.putStringArrayListExtra("friend_names", friendNames);
-                        startActivity(intent);
-                        THIS_INSTANCE.finish();
-                        Toast.makeText(getBaseContext(), "Success!", Toast.LENGTH_LONG).show();
-
-                    } else {
-                        String error_message = response.getString("error_message");
-                        Toast.makeText(getBaseContext(), error_message, Toast.LENGTH_LONG).show();
+                    JSONArray jsonArray = response.getJSONArray("friends");
+                    ArrayList<String> friendIds = new ArrayList<>();
+                    ArrayList<String> friendNames = new ArrayList<>();
+                    for (int i = 0; i < jsonArray.length(); i++) {
+                        JSONObject friend = jsonArray.getJSONObject(i);
+                        friendIds.add(friend.getString("friend_id"));
+                        friendNames.add(friend.getString("user_name"));
                     }
-                } catch (JSONException e) {
-                    e.printStackTrace();
+
+                    Intent intent = new Intent(THIS_INSTANCE, ShoutActivity.class);
+                    intent.putExtra("user_id", user_id);
+                    intent.putStringArrayListExtra("friend_ids", friendIds);
+                    intent.putStringArrayListExtra("friend_names", friendNames);
+                    intent.putExtra("account", account);
+                    startActivity(intent);
+                    THIS_INSTANCE.finish();
+                    Toast.makeText(getBaseContext(), "Success!", Toast.LENGTH_LONG).show();
+
+                } else {
+                    String error_message = response.getString("error_message");
+                    Toast.makeText(getBaseContext(), error_message, Toast.LENGTH_LONG).show();
                 }
             }
         };

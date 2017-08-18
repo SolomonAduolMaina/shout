@@ -82,14 +82,14 @@ if (! $result) {
 	if ($user_exists) {
 		if ($new_user == "Yes") {
 			echo json_encode ( array (
-					'insert' => "Failure!",
+					'result' => "Failure!",
 					'error_message' => "User with that email address already exists",
 					'token' => NULL,
 					'friends' => NULL 
 			) );
 		} else {
 			echo json_encode ( array (
-					'insert' => "Failure!",
+					'result' => "Failure!",
 					'error_message' => "Password Incorrect",
 					'token' => NULL,
 					'friends' => NULL 
@@ -98,14 +98,14 @@ if (! $result) {
 	} else {
 		if ($new_user != "Yes") {
 			echo json_encode ( array (
-					'insert' => "Failure!",
+					'result' => "Failure!",
 					'error_message' => "User does not exist",
 					'token' => NULL,
 					'friends' => NULL 
 			) );
 		} else {
 			echo json_encode ( array (
-					'insert' => "Failure!",
+					'result' => "Failure!",
 					'error_message' => mysqli_error ( $connection ),
 					'token' => NULL,
 					'friends' => NULL 
@@ -125,14 +125,14 @@ if (! $result) {
 			array_push ( $friends, $row );
 		}
 		echo json_encode ( array (
-				'insert' => "Success!",
+				'result' => "Success!",
 				'error_message' => NULL,
 				'token' => mysqli_fetch_assoc ( $select_result ),
 				'friends' => $friends 
 		) );
 	} else {
 		echo json_encode ( array (
-				'insert' => "Failure!",
+				'result' => "Failure!",
 				'error_message' => mysqli_error ( $connection ),
 				'token' => NULL,
 				'friends' => NULL 

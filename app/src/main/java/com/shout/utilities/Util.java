@@ -8,10 +8,6 @@ import org.json.JSONObject;
 import java.util.HashMap;
 import java.util.Iterator;
 
-/**
- * Created by Solomon Aduol Maina on 7/24/2017.
- */
-
 public class Util {
     public static Bundle HashMapToBundle(HashMap<String, String> hashMap) {
         Bundle result = new Bundle();

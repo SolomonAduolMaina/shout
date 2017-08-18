@@ -18,6 +18,7 @@ Event.event_id  = Invite.event_id WHERE Event.creator_id = $user_id OR
 $events_result = mysqli_query ( $connection, $events_query );
 $events = array ();
 while ( $row = mysqli_fetch_assoc ( $events_result ) ) {
+	$row['sent'] = "Yes";
 	array_push ( $events, $row );
 }
 
@@ -26,6 +27,7 @@ $invites_query = "SELECT DISTINCT * FROM Invite WHERE invitee_id = $user_id AND 
 $invites_result = mysqli_query ( $connection, $invites_query );
 $invites = array ();
 while ( $row = mysqli_fetch_assoc ( $invites_result ) ) {
+	$row['sent'] = "Yes";
 	array_push ( $invites, $row );
 }
 
@@ -35,14 +37,14 @@ $update_result = mysqli_query ( $connection, $update_query );
 
 if ($events_result != FALSE && $invites_result != FALSE && $update_result) {
 	echo json_encode ( array (
-			'fetch' => "Success!",
+			'result' => "Success!",
 			'events' => $events,
 			'invites' => $invites,
 			'error_message' => "" 
 	) );
 } else {
 	echo json_encode ( array (
-			'fetch' => "Failure!",
+			'result' => "Failure!",
 			'events' => "",
 			'invites' => "",
 			'error_message' => mysqli_error ( $connection ) 

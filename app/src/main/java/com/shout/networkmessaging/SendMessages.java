@@ -9,6 +9,7 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
 public class SendMessages {
@@ -35,7 +36,11 @@ public class SendMessages {
 
                     @Override
                     public void onResponse(JSONObject response) {
-                        f.process(response);
+                        try {
+                            f.process(response);
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
                     }
                 }, new Response.ErrorListener() {
 
@@ -47,7 +52,7 @@ public class SendMessages {
         SendMessages.getInstance(c).addToRequestQueue(request);
     }
 
-    public RequestQueue getRequestQueue() {
+    private RequestQueue getRequestQueue() {
         if (requestQueue == null) {
             // getApplicationContext() is key, it keeps you from leaking the
             // Activity or BroadcastReceiver if someone passes one in.
@@ -56,11 +61,11 @@ public class SendMessages {
         return requestQueue;
     }
 
-    public <T> void addToRequestQueue(Request<T> req) {
+    private <T> void addToRequestQueue(Request<T> req) {
         getRequestQueue().add(req);
     }
 
     public interface ProcessResponse {
-        void process(JSONObject response);
+        void process(JSONObject response) throws JSONException;
     }
 }

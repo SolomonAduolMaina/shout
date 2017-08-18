@@ -1,46 +1,56 @@
 package com.shout.fragments;
 
 import android.app.Fragment;
+import android.app.FragmentTransaction;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.TabLayout;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Pair;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.shout.R;
+import com.shout.database.DatabaseUtilities;
 import com.shout.database.DatabaseUtilities.SearchClasses;
+import com.shout.database.ShoutDatabaseDescription;
 import com.shout.networkmessaging.SendMessages;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.HashMap;
+
+import static com.shout.activities.ShoutActivity.ACTION_FRAGMENT_PAUSED;
+import static com.shout.fragments.PersonEventsFragment.PERSON_EVENTS_FRAGMENT;
+import static com.shout.utilities.Util.JSONObjectToHashMap;
+
 public class SearchFragment extends Fragment {
     private final int PERSONS = 0;
     private final int EVENTS = 1;
     private final int GROUPS = 2;
+
     private RecyclerView resultsView;
+    private String userId;
+
+    private int OFFSET = 0;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle
             savedInstanceState) {
         View view = inflater.inflate(R.layout.search_fragment, container, false);
-        JSONObject jsonObject = new JSONObject();
-        String query = getActivity().getIntent().getStringExtra("user_id");
-        try {
-            jsonObject.put("user_id", query);
-            jsonObject.put("search_query", getArguments().getString("query"));
-            jsonObject.put("offset", "0");
-            jsonObject.put("query_type", "All");
-            searchTask(jsonObject);
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
 
-        ((TextView) view.findViewById(R.id.query_textView)).setText("Search results for " + query);
+        String query = getArguments().getString("query");
+        String message = "Search results for " + query;
+        ((TextView) view.findViewById(R.id.query_textView)).setText(message);
+
+        userId = getActivity().getIntent().getStringExtra("user_id");
         resultsView = (RecyclerView) view.findViewById(R.id.results_recyclerView);
         TabLayout resultsTabs = (TabLayout) view.findViewById(R.id.results_tabLayout);
         resultsView.setLayoutManager(new LinearLayoutManager(getActivity()));
@@ -60,32 +70,71 @@ public class SearchFragment extends Fragment {
             public void onTabReselected(TabLayout.Tab tab) {
             }
         });
+
+        JSONObject jsonObject = new JSONObject();
+        try {
+            jsonObject.put("user_id", getActivity().getIntent().getStringExtra("user_id"));
+            jsonObject.put("search_query", query);
+            jsonObject.put("offset", OFFSET);
+            searchTask(jsonObject);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
         return view;
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        Intent intent = new Intent(ACTION_FRAGMENT_PAUSED);
+        LocalBroadcastManager.getInstance(getActivity()).sendBroadcast(intent);
     }
 
     public void searchTask(final JSONObject jsonObject) {
         SendMessages.ProcessResponse lambda = new SendMessages.ProcessResponse() {
             @Override
-            public void process(JSONObject response) {
-                try {
-                    if (response.getString("insert").equals("Success!")) {
-                        ((SearchResultsAdapter) resultsView.getAdapter()).setData(response);
-                    } else {
-                        String remoteError = response.getString("error_message");
-                        Toast.makeText(getActivity(), remoteError, Toast.LENGTH_LONG).show();
-                    }
-                } catch (JSONException e) {
-                    e.printStackTrace();
+            public void process(JSONObject response) throws JSONException {
+                if (response.getString("results").equals("Success!")) {
+                    ((SearchResultsAdapter) resultsView.getAdapter()).setData(response);
+                } else {
+                    String remoteError = response.getString("error_message");
+                    Toast.makeText(getActivity(), remoteError, Toast.LENGTH_LONG).show();
                 }
             }
         };
         SendMessages.doOnResponse(lambda, getActivity(), jsonObject, getString(R.string.search_php_path));
     }
 
+    void updateGoingTask(final Pair<SearchResultsAdapter.ViewHolder, JSONObject> pair) {
+        SendMessages.ProcessResponse lambda = new SendMessages.ProcessResponse() {
+            @Override
+            public void process(JSONObject response) throws JSONException {
+                if (response.get("result").equals("Success!")) {
+                    HashMap<String, String> newData =
+                            JSONObjectToHashMap(response.getJSONObject("event_invite"));
+                    Pair<Integer, Integer> result = DatabaseUtilities.updateLocalDatabase(newData,
+                            getActivity(), true);
+                    if (result.first.equals(1) && result.second.equals(1)) {
+                        SearchResultsAdapter adapter = (SearchResultsAdapter) resultsView.getAdapter();
+                        HashMap<String, String> oldData = pair.first.data;
+                        pair.first.updateData(newData);
+                        int position = adapter.searchClasses.events.indexOf(oldData);
+                        adapter.searchClasses.events.set(position, newData);
 
-    private class SearchResultsAdapter extends RecyclerView.Adapter<SearchResultsAdapter
-            .ViewHolder> {
-        public SearchClasses searchClasses;
+                        Toast.makeText(getActivity(), "Success!", Toast.LENGTH_LONG).show();
+                    } else {
+                        String localError = "Error updating local database";
+                        Toast.makeText(getActivity(), localError, Toast.LENGTH_LONG).show();
+                    }
+                }
+            }
+        };
+        SendMessages.doOnResponse(lambda, getActivity(), pair.second,
+                getString(R.string.update_going_php_path));
+    }
+
+    private class SearchResultsAdapter extends RecyclerView.Adapter<SearchResultsAdapter.ViewHolder> {
+        SearchClasses searchClasses;
         private int tab = 0;
 
         @Override
@@ -97,35 +146,45 @@ public class SearchFragment extends Fragment {
         @Override
         public void onBindViewHolder(SearchResultsAdapter.ViewHolder holder, int position) {
             if (searchClasses != null) {
-                try {
-                    TextView name = (TextView) holder.view.findViewById(R.id.name_textView);
-                    TextView type = (TextView) holder.view.findViewById(R.id.type_textView);
-                    JSONObject data;
-                    switch (tab) {
-                        case EVENTS:
-                            data = searchClasses.eventInvites.getJSONObject(position);
-                            name.setText(data.getString("title"));
-                            type.setText("Event");
-                            holder.view.setOnClickListener(new View.OnClickListener() {
-                                @Override
-                                public void onClick(View view) {
+                switch (tab) {
+                    case EVENTS:
+                        holder.setEventsViewHolder(position, searchClasses.events);
+                        holder.view.findViewById(R.id.events_cardView).setVisibility(View.VISIBLE);
+                        holder.view.findViewById(R.id.group_cardView).setVisibility(View.GONE);
+                        holder.view.findViewById(R.id.person_cardView).setVisibility(View.GONE);
+                        break;
+                    case PERSONS:
+                        holder.view.findViewById(R.id.events_cardView).setVisibility(View.GONE);
+                        holder.view.findViewById(R.id.group_cardView).setVisibility(View.GONE);
+                        holder.view.findViewById(R.id.person_cardView).setVisibility(View.VISIBLE);
 
-                                }
-                            });
-                            break;
-                        case PERSONS:
-                            data = searchClasses.persons.getJSONObject(position);
-                            name.setText(data.getString("user_name"));
-                            type.setText("People");
-                            break;
-                        case GROUPS:
-                            data = searchClasses.groups.getJSONObject(position);
-                            name.setText(data.getString("group_name"));
-                            type.setText("Group");
-                            break;
-                    }
-                } catch (JSONException e) {
-                    e.printStackTrace();
+                        TextView name = (TextView) holder.view.findViewById(R.id.person_textView);
+                        final HashMap<String, String> person = searchClasses.people.get(position);
+                        name.setText(person.get("user_name"));
+
+                        holder.view.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View view) {
+                                PersonEventsFragment personEventsFragment = new PersonEventsFragment();
+                                Bundle bundle = new Bundle();
+                                bundle.putString("person_id", person.get("user_id"));
+                                personEventsFragment.setArguments(bundle);
+                                FragmentTransaction transaction = getFragmentManager().beginTransaction();
+                                transaction.replace(R.id.fragment, personEventsFragment, PERSON_EVENTS_FRAGMENT);
+                                transaction.addToBackStack(PERSON_EVENTS_FRAGMENT);
+                                transaction.commit();
+                            }
+                        });
+                        break;
+                    case GROUPS:
+                        holder.view.findViewById(R.id.events_cardView).setVisibility(View.GONE);
+                        holder.view.findViewById(R.id.group_cardView).setVisibility(View.VISIBLE);
+                        holder.view.findViewById(R.id.person_cardView).setVisibility(View.GONE);
+
+                        name = (TextView) holder.view.findViewById(R.id.group_textView);
+                        HashMap<String, String> group = searchClasses.groups.get(position);
+                        name.setText(group.get("group_name"));
+                        break;
                 }
             }
         }
@@ -135,11 +194,11 @@ public class SearchFragment extends Fragment {
             if (searchClasses != null) {
                 switch (tab) {
                     case EVENTS:
-                        return searchClasses.eventInvites.length();
+                        return searchClasses.events.size();
                     case PERSONS:
-                        return searchClasses.persons.length();
+                        return searchClasses.people.size();
                     case GROUPS:
-                        return searchClasses.groups.length();
+                        return searchClasses.groups.size();
                 }
             }
             return 0;
@@ -150,17 +209,50 @@ public class SearchFragment extends Fragment {
             notifyDataSetChanged();
         }
 
-        public void changeTab(int tab) {
+        void changeTab(int tab) {
             this.tab = tab;
             notifyDataSetChanged();
         }
 
-        public class ViewHolder extends RecyclerView.ViewHolder {
-            public View view;
+        class ViewHolder extends DatabaseUtilities.EventsViewHolder {
 
-            public ViewHolder(View view) {
-                super(view);
-                this.view = view;
+            ViewHolder(View view) {
+                super(view, getFragmentManager());
+            }
+
+            View.OnClickListener setUpdateInviteListener(final ViewHolder holder,
+                                                         final String goingValue) {
+                return new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        holder.data.put(ShoutDatabaseDescription.Invite.COLUMN_INVITEE_ID, userId);
+                        holder.data.put(ShoutDatabaseDescription.Invite.COLUMN_GOING, goingValue);
+                        if (holder.data.get(ShoutDatabaseDescription.Invite.COLUMN_TYPE).equals("null")) {
+                            holder.data.put(ShoutDatabaseDescription.Invite.COLUMN_TYPE, "Joined");
+                            holder.data.put(ShoutDatabaseDescription.Invite.COLUMN_SENT, "Yes");
+                        }
+                        JSONObject jsonObject = new JSONObject(holder.data);
+                        updateGoingTask(new Pair<>(holder, jsonObject));
+                    }
+                };
+            }
+
+            @Override
+            public void setYesOnClickListener(Button button) {
+                if (this.data.get(ShoutDatabaseDescription.Event.COLUMN_CREATOR_ID).equals(userId)) {
+                    button.setVisibility(View.GONE);
+                } else {
+                    button.setOnClickListener(setUpdateInviteListener(this, "Yes"));
+                }
+            }
+
+            @Override
+            public void setNoOnClickListener(Button button) {
+                if (this.data.get(ShoutDatabaseDescription.Event.COLUMN_CREATOR_ID).equals(userId)) {
+                    button.setVisibility(View.GONE);
+                } else {
+                    button.setOnClickListener(setUpdateInviteListener(this, "No"));
+                }
             }
         }
     }
