@@ -1,23 +1,38 @@
 <resources>
     <string name="app_name">Shout!</string>
+    <string name="facebook_app_id">1064884926910137</string>
+    <string name="android.geo.API_KEY">AIzaSyDskiWdzpxkBpN8fzQH9CVLQ57yMnuV9Zg</string>
+
     <string name="action_settings">Settings</string>
     <string name="event_name">Title</string>
     <string name="event_location">Location</string>
     <string name="start_dateTime">Start Date and Time</string>
     <string name="end_dateTime">End Date and Time</string>
     <string name="event_tag">Tag</string>
-    <string name="facebook_app_id">1064884926910137</string>
     <string name="logout_string">Click to log out</string>
     <string name="event_description">Event Description</string>
     <string name="event_friends">Invite Friends</string>
+    <string name="shout_event">Shout! Event</string>
+    <string name="friends_and_groups">Invite Friends and Groups</string>
     <string name="invalid_query_uri">Invalid query Uri: </string>
     <string name="invalid_insert_uri">Invalid insert Uri: </string>
     <string name="invalid_update_uri">Invalid update Uri: </string>
     <string name="invalid_delete_uri">Invalid delete Uri: </string>
     <string name="insert_failed">Insert failed:</string>
+
+    <string name="account_type">http://10.0.2.2</string>
+    <string name="login_php_path">http://10.0.2.2/login.php</string>
+    <string name="sync_php_path">http://10.0.2.2/sync.php</string>
+    <string name="update_going_php_path">http://10.0.2.2/update_going.php</string>
+    <string name="search_php_path">http://10.0.2.2/search.php</string>
+    <string name="create_event_php_path">http://10.0.2.2/create_event.php</string>
+    <string name="person_events_path">http://10.0.2.2/person_events.php</string>
+
     <string name="create_event">Create Event</string>
-    <string name="shout_event">Shout! Event</string>
-    <string name="friends_and_groups">Invite Friends and Groups</string>
+    <string name="confirm_changes">Confirm Changes</string>
+    <string name="unfollow_event">Unfollow Event</string>
+    <string name="accept_invite">Accept Invite</string>
+    <string name="join_event">Join Event</string>
 
     <string-array name="preferences">
         <item>None</item>

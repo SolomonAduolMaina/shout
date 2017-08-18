@@ -11,33 +11,34 @@
 
         <android.support.design.widget.TabItem
             android:id="@+id/all_tab"
-            android:text="All"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"/>
+            android:layout_height="wrap_content"
+            android:text="All" />
 
         <android.support.design.widget.TabItem
             android:id="@+id/myEvents_tab"
-            android:text="My Events"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"/>
+            android:layout_height="wrap_content"
+            android:text="My Events" />
 
         <android.support.design.widget.TabItem
             android:id="@+id/invited_tab"
-            android:text="Invited"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"/>
+            android:layout_height="wrap_content"
+            android:text="Invited" />
 
         <android.support.design.widget.TabItem
             android:id="@+id/suggested_tab"
-            android:text="Suggested"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"/>
+            android:layout_height="wrap_content"
+            android:text="Suggested" />
 
     </android.support.design.widget.TabLayout>
+
     <android.support.v7.widget.RecyclerView
         android:id="@+id/events_recyclerView"
-        android:scrollbars="vertical"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"/>
+        android:layout_height="wrap_content"
+        android:scrollbars="vertical" />
 
 </LinearLayout>

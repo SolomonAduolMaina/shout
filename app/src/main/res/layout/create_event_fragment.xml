@@ -2,23 +2,25 @@
 
 <TableLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/table_tableLayout"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:id="@+id/table_tableLayout">
+    android:layout_height="wrap_content">
 
-    <TableRow>
+    <TableRow
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
 
         <TextView
             android:id="@+id/eventTitle_textView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/event_name"/>
+            android:text="@string/event_name" />
 
         <EditText
             android:id="@+id/eventTitle_editText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:inputType="text"/>
+            android:inputType="text" />
     </TableRow>
 
     <TableRow>
@@ -30,11 +32,11 @@
             android:text="@string/event_location"/>
 
 
-        <EditText
-            android:id="@+id/eventLocation_editText"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:inputType="text"/>
+        <fragment
+            android:id="@+id/location_autoComplete"
+            android:name="com.google.android.gms.location.places.ui.PlaceAutocompleteFragment"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
     </TableRow>
 
     <TableRow>
@@ -127,21 +129,24 @@
             android:inputType="text"/>
     </TableRow>
 
-    <TableRow>
+    <TableRow
+        android:id="@+id/friends_tableRow"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
         <TextView
             android:id="@+id/inviteFriends_textView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Invite Friends"/>
+            android:text="Invite Friends" />
 
-        <com.google.android.flexbox.FlexboxLayout
-            xmlns:android="http://schemas.android.com/apk/res/android"
+        <com.google.android.flexbox.FlexboxLayout xmlns:android="http://schemas.android.com/apk/res/android"
             xmlns:app="http://schemas.android.com/apk/res-auto"
             android:id="@+id/friendsArea_flexBox"
             android:layout_width="0dp"
-            android:layout_weight="0.5"
             android:layout_height="wrap_content"
             android:layout_gravity="fill_horizontal"
+            android:layout_weight="0.5"
             app:alignContent="stretch"
             app:alignItems="stretch"
             app:flexWrap="wrap">
@@ -151,13 +156,12 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="fill_horizontal"
-                android:dropDownAnchor="@id/table_tableLayout"
-                android:hint="@string/friends_and_groups"/>
+                android:hint="@string/friends_and_groups" />
         </com.google.android.flexbox.FlexboxLayout>
 
     </TableRow>
 
-    <TableRow>
+    <TableRow android:id="@+id/anchor_tableRow">
 
         <CheckBox
             android:id="@+id/shoutEvent_checkBox"

@@ -4,7 +4,7 @@ import android.app.Service;
 import android.content.Intent;
 import android.os.IBinder;
 
-import com.shout.authenticators.Authenticator;
+import com.shout.authenticator.Authenticator;
 
 public class AuthenticatorService extends Service {
     // Instance field that stores the authenticator object

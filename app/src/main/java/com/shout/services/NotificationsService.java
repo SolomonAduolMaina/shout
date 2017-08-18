@@ -4,12 +4,11 @@ import android.app.Service;
 import android.content.Intent;
 import android.os.IBinder;
 
-import com.shout.syncAdapters.NotificationsSyncAdapter;
+import com.shout.syncAdapter.NotificationsSyncAdapter;
 
 public class NotificationsService extends Service {
-    private static NotificationsSyncAdapter syncAdapter = null;
     private static final Object sSyncAdapterLock = new Object();
-
+    private static NotificationsSyncAdapter syncAdapter = null;
 
     @Override
     public void onCreate() {
