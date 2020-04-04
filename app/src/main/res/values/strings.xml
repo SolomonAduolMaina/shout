@@ -27,6 +27,7 @@
     <string name="search_php_path">http://10.0.2.2/search.php</string>
     <string name="create_event_php_path">http://10.0.2.2/create_event.php</string>
     <string name="person_events_path">http://10.0.2.2/person_events.php</string>
+    <string name="nearest_events_path">http://10.0.2.2/nearest_events.php</string>
 
     <string name="create_event">Create Event</string>
     <string name="confirm_changes">Confirm Changes</string>

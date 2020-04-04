@@ -94,7 +94,7 @@ public class SearchFragment extends Fragment {
         SendMessages.ProcessResponse lambda = new SendMessages.ProcessResponse() {
             @Override
             public void process(JSONObject response) throws JSONException {
-                if (response.getString("results").equals("Success!")) {
+                if (response.getString("result").equals("Success!")) {
                     ((SearchResultsAdapter) resultsView.getAdapter()).setData(response);
                 } else {
                     String remoteError = response.getString("error_message");

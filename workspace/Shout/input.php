@@ -1,12 +1,12 @@
 <?php
 // API Url
-$url = 'localhost/person_events.php';
+$url = 'localhost/nearest_events.php';
 
 // Initiate cURL.
 $ch = curl_init ( $url );
 $jsonData = array (
-		'user_id' => "21",
-		'person_id' => "23",
+		'latitude' => "40.0",
+		'longitude' => "-75.0",
 		'offset' => "0"
 );
 

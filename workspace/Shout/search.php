@@ -49,7 +49,7 @@ while ( $row = mysqli_fetch_assoc ( $groups_result ) ) {
 
 if ($events_result != FALSE && $people_result != FALSE && $groups_result != FALSE) {
 	echo json_encode ( array (
-			'results' => "Success!",
+			'result' => "Success!",
 			'events' => $events,
 			'people' => $people,
 			'groups' => $groups,
@@ -57,7 +57,7 @@ if ($events_result != FALSE && $people_result != FALSE && $groups_result != FALS
 	) );
 } else {
 	echo json_encode ( array (
-			'results' => "Failure!",
+			'result' => "Failure!",
 			'events' => "",
 			'people' => "",
 			'groups' => "",
